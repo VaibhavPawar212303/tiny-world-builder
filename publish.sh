@@ -62,14 +62,15 @@ cp roadmap.html "$DIST/roadmap.html"
 
 # Inject Clerk environment variables into HTML files
 if [[ -n "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}" ]]; then
-  CLERK_INJECT="<script>window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY='$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY';</script>"
+  printf '✓ Injecting Clerk key: %s\n' "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:0:20}..."
   for html_file in "$DIST"/index.html "$DIST"/tiny-world-builder.html "$DIST"/community.html "$DIST"/admin-users.html "$DIST"/sign-in.html "$DIST"/sign-up.html; do
     if [[ -f "$html_file" ]]; then
-      # Insert the script right before </head>
-      sed -i "s|</head>|$CLERK_INJECT</head>|g" "$html_file"
+      # Use a temp file for safer sed replacement
+      sed "s|window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_[^']*'|window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = '$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'|g" "$html_file" > "$html_file.tmp"
+      mv "$html_file.tmp" "$html_file"
+      printf '  ✓ Injected into %s\n' "$(basename "$html_file")"
     fi
   done
-  printf '✓ Injected Clerk environment variables\n'
 fi
 cp news.html "$DIST/news.html"
 cp docs.html "$DIST/docs.html"
