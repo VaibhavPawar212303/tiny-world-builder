@@ -4,9 +4,10 @@ import { query } from '@/app/lib/db';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { userId } = await auth();
 
     if (!userId) {
@@ -18,7 +19,7 @@ export async function GET(
 
     const results: any = await query(
       'SELECT * FROM worlds WHERE id = ? AND clerk_id = ?',
-      [params.id, userId]
+      [id, userId]
     );
 
     if (!Array.isArray(results) || results.length === 0) {
@@ -40,9 +41,10 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { userId } = await auth();
 
     if (!userId) {
@@ -58,7 +60,7 @@ export async function PUT(
     await query(
       `UPDATE worlds SET title = ?, description = ?, state = ?, updated_at = NOW()
        WHERE id = ? AND clerk_id = ?`,
-      [title, description, JSON.stringify(state), params.id, userId]
+      [title, description, JSON.stringify(state), id, userId]
     );
 
     return NextResponse.json({ success: true });
@@ -73,9 +75,10 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { userId } = await auth();
 
     if (!userId) {
@@ -87,7 +90,7 @@ export async function DELETE(
 
     await query(
       'DELETE FROM worlds WHERE id = ? AND clerk_id = ?',
-      [params.id, userId]
+      [id, userId]
     );
 
     return NextResponse.json({ success: true });
