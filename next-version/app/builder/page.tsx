@@ -3,6 +3,7 @@
 import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import { Canvas } from './components/canvas';
+import { BuildingPalette } from './components/building-palette';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Voxel } from './lib/voxel-grid';
@@ -20,6 +21,7 @@ export default function BuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [currentVoxels, setCurrentVoxels] = useState<Voxel[]>([]);
 
   useEffect(() => {
     if (!worldId || !isLoaded) return;
@@ -45,6 +47,7 @@ export default function BuilderPage() {
   }, [worldId, isLoaded]);
 
   const handleVoxelUpdate = async (voxels: Voxel[]) => {
+    setCurrentVoxels(voxels);
     if (!worldId || isSaving) return;
 
     setIsSaving(true);
@@ -60,6 +63,12 @@ export default function BuilderPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handlePlaceBuilding = (buildingVoxels: Voxel[]) => {
+    // Merge building voxels with current voxels and update
+    const mergedVoxels = [...currentVoxels, ...buildingVoxels];
+    handleVoxelUpdate(mergedVoxels);
   };
 
   const handleShare = async () => {
@@ -159,8 +168,9 @@ export default function BuilderPage() {
         </div>
       </header>
 
-      <main style={{ flex: 1, background: '#1a1a1a', overflow: 'hidden' }}>
+      <main style={{ flex: 1, background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
         <Canvas initialVoxels={initialVoxels} onVoxelUpdate={handleVoxelUpdate} gridSize={gridSize} />
+        <BuildingPalette onPlaceBuilding={handlePlaceBuilding} onAddVoxels={handlePlaceBuilding} gridSize={gridSize} />
       </main>
 
       {/* Share Modal */}
