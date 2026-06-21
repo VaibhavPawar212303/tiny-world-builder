@@ -147,13 +147,19 @@ async function initClerk() {
     try {
       console.log('[Clerk] Starting Clerk initialization...');
 
-      // For local development, skip Clerk auth
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      console.log('[Clerk] Development mode:', isDev);
-      console.log('[Clerk] Hostname:', window.location.hostname);
+      // For local development and Vercel preview/production, skip Clerk auth for now
+      const hostname = window.location.hostname;
+      const isDev = hostname === 'localhost' || hostname === '127.0.0.1';
+      const isVercel = hostname.includes('vercel.app');
+      const skipAuth = isDev || isVercel;
 
-      if (isDev) {
-        console.log('[Clerk] ✓ Development mode - skipping Clerk auth');
+      console.log('[Clerk] Hostname:', hostname);
+      console.log('[Clerk] Development mode:', isDev);
+      console.log('[Clerk] Vercel deployment:', isVercel);
+      console.log('[Clerk] Skip auth:', skipAuth);
+
+      if (skipAuth) {
+        console.log('[Clerk] ✓ Skipping auth (local dev or Vercel deployment)');
         hideClerkAuth();
         clerkInitialized = true;
         return true;
