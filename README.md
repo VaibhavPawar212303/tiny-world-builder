@@ -1,23 +1,23 @@
-# Tiny World Builder
+# Tiny World Builder - Next.js Version
 
-[![GitHub stars](https://img.shields.io/github/stars/jasonkneen/tiny-world-builder?style=flat&logo=github&label=Stars&color=3a72c8)](https://github.com/jasonkneen/tiny-world-builder/stargazers)
+A 3D voxel world builder running in your browser, built with Next.js.
 
-![Tiny World Builder](assets/landing-hero.png)
+## Repository Structure
 
-A self-contained 3D voxel world editor in the browser: build, sculpt, fly
-through, and share tiny worlds.
+```
+tiny-world-builder/
+├── next-version/          ⭐ MAIN APPLICATION (Next.js)
+│   ├── app/               Next.js App Router
+│   ├── api/               API routes
+│   ├── public/            Static files
+│   └── package.json
+│
+└── BRANCHES
+    ├── main (current)     → Next.js version only
+    └── legacy             → Original HTML/JS version (archived)
+```
 
-| Build | Fly |
-| --- | --- |
-| ![Build worlds](assets/landing-feature-build.png) | ![Fly and explore](assets/landing-feature-fly.png) |
-| Place terrain, props, homes, paths, crops, and animals. | Switch camera modes and explore from every angle. |
-
-| Sculpt | Share |
-| --- | --- |
-| ![Sculpt terrain](assets/landing-feature-sculpt.png) | ![Share your tinyverse](assets/landing-feature-share.png) |
-| Raise, lower, paint, and tune the ground into cliffs and rivers. | Save, remix, export, and open worlds to real players. |
-
-## Running locally
+## Quick Start
 
 ```bash
 npm run dev
