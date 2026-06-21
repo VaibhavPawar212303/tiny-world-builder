@@ -5,7 +5,6 @@ import { BUILDING_PRESETS, type BuildingType, placeBuilding } from '../lib/build
 
 interface BuildingPaletteProps {
   onPlaceBuilding?: (voxels: Array<{ x: number; y: number; z: number; color: string }>) => void;
-  onAddVoxels?: (voxels: Array<{ x: number; y: number; z: number; color: string }>) => void;
   gridSize: number;
 }
 
@@ -20,7 +19,6 @@ export function BuildingPalette({ onPlaceBuilding, gridSize }: BuildingPalettePr
 
   const handlePlace = () => {
     const voxels = placeBuilding(selectedPreset, offsetX, offsetY, offsetZ);
-    onAddVoxels?.(voxels);
     onPlaceBuilding?.(voxels);
     // Reset offsets
     setOffsetX(0);

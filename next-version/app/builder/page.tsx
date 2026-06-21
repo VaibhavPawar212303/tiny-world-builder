@@ -170,7 +170,7 @@ export default function BuilderPage() {
 
       <main style={{ flex: 1, background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
         <Canvas initialVoxels={initialVoxels} onVoxelUpdate={handleVoxelUpdate} gridSize={gridSize} />
-        <BuildingPalette onPlaceBuilding={handlePlaceBuilding} onAddVoxels={handlePlaceBuilding} gridSize={gridSize} />
+        <BuildingPalette onPlaceBuilding={handlePlaceBuilding} gridSize={gridSize} />
       </main>
 
       {/* Share Modal */}
