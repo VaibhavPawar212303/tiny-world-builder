@@ -16,14 +16,18 @@ type ClerkWebhookEvent = {
 };
 
 export async function POST(req: Request) {
+  console.log('🔔 Webhook received');
+
   const headerPayload = await headers();
   const svixId = headerPayload.get('svix-id');
   const svixTimestamp = headerPayload.get('svix-timestamp');
   const svixSignature = headerPayload.get('svix-signature');
 
+  console.log('Headers:', { svixId: !!svixId, svixTimestamp: !!svixTimestamp, svixSignature: !!svixSignature });
+
   // Handle missing headers
   if (!svixId || !svixTimestamp || !svixSignature) {
-    console.error('Missing Clerk webhook headers');
+    console.error('❌ Missing Clerk webhook headers');
     return NextResponse.json(
       { error: 'Missing webhook headers' },
       { status: 400 }
@@ -50,8 +54,11 @@ export async function POST(req: Request) {
       'svix-signature': svixSignature,
     }) as ClerkWebhookEvent;
 
+    console.log(`📨 Event received: ${evt.type}`);
+
     // Handle user.created event
     if (evt.type === 'user.created') {
+      console.log(`✨ Creating user: ${evt.data.id}`);
       const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
       const db = await getDatabase();
