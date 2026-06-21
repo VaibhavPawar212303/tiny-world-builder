@@ -146,8 +146,13 @@ if [[ -d icons ]]; then
   ' sh {} +)
 fi
 
-cp README.md "$DIST/README.md"
-cp LICENSE "$DIST/LICENSE"
+# Copy README and LICENSE if they exist
+if [[ -f README.md ]]; then
+  cp README.md "$DIST/README.md"
+fi
+if [[ -f LICENSE ]]; then
+  cp LICENSE "$DIST/LICENSE"
+fi
 
 # Markdown docs rendered by doc.html (the styled in-site viewer).
 if [[ -d docs ]]; then
