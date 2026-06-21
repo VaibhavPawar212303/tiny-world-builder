@@ -6,9 +6,17 @@
   <title>Sign In - Tiny World Builder</title>
   <link rel="icon" href="assets/twlogo.png" />
   <script>
-    window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+    // Clerk publishable key - set directly as fallback
+    const CLERK_KEY = 'pk_test_Y2hhcm1lZC1yZWRiaXJkLTIzLmNsZXJrLmFjY291bnRzLmRldiQ';
+
+    // Try to get Clerk key from multiple sources
+    window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
+      window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
       localStorage.getItem('CLERK_PUBLISHABLE_KEY') ||
-      sessionStorage.getItem('CLERK_PUBLISHABLE_KEY');
+      sessionStorage.getItem('CLERK_PUBLISHABLE_KEY') ||
+      CLERK_KEY; // Direct fallback
+
+    console.log('[SignIn] Clerk key configured:', window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? '✓' : '✗');
   </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
