@@ -1,5 +1,4 @@
-import { SignedIn, SignedOut } from '@clerk/react';
-import { RedirectToSignIn } from '@clerk/nextjs';
+import { Show, RedirectToSignIn } from '@clerk/nextjs';
 
 export default function BuilderLayout({
   children,
@@ -8,10 +7,10 @@ export default function BuilderLayout({
 }) {
   return (
     <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut>
+      <Show when="signed-in">{children}</Show>
+      <Show when="signed-out">
         <RedirectToSignIn />
-      </SignedOut>
+      </Show>
     </>
   );
 }

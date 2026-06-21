@@ -1,8 +1,6 @@
 'use client';
 
-import { UserButton } from '@clerk/nextjs';
-import { SignedIn, SignedOut } from '@clerk/react';
-import Link from 'next/link';
+import { UserButton, SignInButton, SignUpButton, Show } from '@clerk/nextjs';
 
 export default function Home() {
   return (
@@ -14,7 +12,7 @@ export default function Home() {
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     }}>
-      <SignedOut>
+      <Show when="signed-out">
         <div style={{
           textAlign: 'center',
           padding: '40px 20px',
@@ -42,39 +40,44 @@ export default function Home() {
             justifyContent: 'center',
             flexWrap: 'wrap',
           }}>
-            <Link href="/sign-in" style={{
-              display: 'inline-block',
-              padding: '14px 32px',
-              background: 'white',
-              color: '#667eea',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: '600',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              transition: 'transform 0.2s',
-            }}>
-              Sign In
-            </Link>
-            <Link href="/sign-up" style={{
-              display: 'inline-block',
-              padding: '14px 32px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: '600',
-              border: '2px solid white',
-              transition: 'transform 0.2s',
-            }}>
-              Create Account
-            </Link>
+            <SignInButton mode="modal">
+              <button style={{
+                display: 'inline-block',
+                padding: '14px 32px',
+                background: 'white',
+                color: '#667eea',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '16px',
+                fontWeight: '600',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                border: 'none',
+                cursor: 'pointer',
+              }}>
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button style={{
+                display: 'inline-block',
+                padding: '14px 32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '16px',
+                fontWeight: '600',
+                border: '2px solid white',
+                cursor: 'pointer',
+              }}>
+                Create Account
+              </button>
+            </SignUpButton>
           </div>
         </div>
-      </SignedOut>
+      </Show>
 
-      <SignedIn>
+      <Show when="signed-in">
         <div style={{
           position: 'absolute',
           top: '20px',
@@ -104,7 +107,7 @@ export default function Home() {
             Start creating your own unique voxel worlds
           </p>
 
-          <Link href="/builder" style={{
+          <a href="/builder" style={{
             display: 'inline-block',
             padding: '16px 40px',
             background: 'white',
@@ -116,9 +119,9 @@ export default function Home() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           }}>
             Open Builder
-          </Link>
+          </a>
         </div>
-      </SignedIn>
+      </Show>
     </main>
   );
 }
