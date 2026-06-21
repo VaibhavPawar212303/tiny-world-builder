@@ -121,19 +121,90 @@ function setupSignInButton() {
     return;
   }
 
-  console.log('[Auth] Setting up sign-in button');
+  console.log('[Auth] Setting up Clerk embedded sign-in');
   authContainer.style.display = 'flex';
 
-  signInRoot.innerHTML = `
-    <div style="text-align:center;font-family:system-ui,-apple-system,sans-serif">
-      <p style="margin:0 0 24px;font-size:16px;color:#333">Sign in to continue building</p>
-      <div style="display:flex;gap:12px;flex-direction:column">
-        <a href="/sign-in.html" style="display:inline-block;padding:12px 32px;background:#0066cc;color:white;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#0052a3'" onmouseout="this.style.background='#0066cc'">Sign In</a>
-        <a href="/sign-up.html" style="display:inline-block;padding:12px 32px;background:#666;color:white;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#666'">Sign Up</a>
+  const publishableKey = window.__CLERK_PUBLISHABLE_KEY;
+  if (!publishableKey) {
+    console.error('[Auth] Clerk publishable key not found, cannot load embedded UI');
+    signInRoot.innerHTML = `
+      <div style="text-align:center;color:#d32f2f;font-family:system-ui,-apple-system,sans-serif">
+        <h2>Clerk is not configured</h2>
+        <p>Unable to load authentication. Please check environment variables.</p>
       </div>
-      <p style="margin-top:16px;font-size:12px;color:#666">Create an account or sign in to your existing account</p>
-    </div>
-  `;
+    `;
+    return;
+  }
+
+  // Load Clerk.js for embedded sign-in UI
+  if (!window.Clerk) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://cdn.clerk.com/clerk.js';
+    script.onload = () => {
+      console.log('[Auth] Clerk.js loaded, initializing embedded UI');
+      initClerkUI(publishableKey, signInRoot);
+    };
+    script.onerror = () => {
+      console.error('[Auth] Failed to load Clerk.js');
+      signInRoot.innerHTML = `
+        <div style="text-align:center;color:#d32f2f;font-family:system-ui,-apple-system,sans-serif">
+          <h2>Failed to load authentication</h2>
+          <p>Could not load Clerk authentication library</p>
+        </div>
+      `;
+    };
+    document.head.appendChild(script);
+  } else {
+    initClerkUI(publishableKey, signInRoot);
+  }
+}
+
+function initClerkUI(publishableKey, container) {
+  console.log('[Auth] Initializing Clerk embedded UI');
+
+  // Create a container for Clerk's sign-in component
+  const clerkContainer = document.createElement('div');
+  clerkContainer.id = 'clerk-embedded-signin';
+  clerkContainer.style.cssText = 'width: 100%; max-width: 400px; margin: 0 auto;';
+  container.appendChild(clerkContainer);
+
+  // Initialize Clerk with the publishable key
+  if (window.Clerk) {
+    window.Clerk.load({ publishableKey }).then(() => {
+      console.log('[Auth] ✓ Clerk loaded, mounting sign-in component');
+      window.Clerk.mountSignIn(clerkContainer, {
+        appearance: {
+          elements: {
+            rootBox: {
+              boxShadow: 'none',
+              background: 'transparent',
+            },
+            card: {
+              boxShadow: 'none',
+              background: 'transparent',
+            },
+          },
+        },
+      });
+    }).catch(err => {
+      console.error('[Auth] Failed to initialize Clerk:', err);
+      container.innerHTML = `
+        <div style="text-align:center;color:#d32f2f;font-family:system-ui,-apple-system,sans-serif">
+          <h2>Authentication error</h2>
+          <p>${err.message || 'Failed to load sign-in form'}</p>
+        </div>
+      `;
+    });
+  } else {
+    console.error('[Auth] Clerk.js not available');
+    container.innerHTML = `
+      <div style="text-align:center;color:#d32f2f;font-family:system-ui,-apple-system,sans-serif">
+        <h2>Clerk library not loaded</h2>
+        <p>Please refresh the page</p>
+      </div>
+    `;
+  }
 }
 
 async function initClerk() {
@@ -147,19 +218,13 @@ async function initClerk() {
     try {
       console.log('[Clerk] Starting Clerk initialization...');
 
-      // For local development and Vercel preview/production, skip Clerk auth for now
-      const hostname = window.location.hostname;
-      const isDev = hostname === 'localhost' || hostname === '127.0.0.1';
-      const isVercel = hostname.includes('vercel.app');
-      const skipAuth = isDev || isVercel;
-
-      console.log('[Clerk] Hostname:', hostname);
+      // For local development only, skip auth
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      console.log('[Clerk] Hostname:', window.location.hostname);
       console.log('[Clerk] Development mode:', isDev);
-      console.log('[Clerk] Vercel deployment:', isVercel);
-      console.log('[Clerk] Skip auth:', skipAuth);
 
-      if (skipAuth) {
-        console.log('[Clerk] ✓ Skipping auth (local dev or Vercel deployment)');
+      if (isDev) {
+        console.log('[Clerk] ✓ Development mode - skipping Clerk auth');
         hideClerkAuth();
         clerkInitialized = true;
         return true;
