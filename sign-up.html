@@ -138,13 +138,24 @@
       signupBtn.addEventListener('click', () => {
         showLoading();
 
+        // Development mode: Use test token instead of Clerk
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isDev) {
+          // Create test token for local development
+          const testToken = 'test-token-clerk-user-' + Date.now();
+          localStorage.setItem('clerk-session-token', testToken);
+          localStorage.setItem('clerk-user-id', 'test-user-' + Date.now());
+          window.location.href = '/tiny-world-builder.html';
+          return;
+        }
+
         const publishableKey = window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
         if (!publishableKey) {
           showError('Clerk not configured. Using test login...');
           setTimeout(() => {
             const testToken = 'test-token-clerk-user-' + Date.now();
-            sessionStorage.setItem('clerk-session-token', testToken);
+            localStorage.setItem('clerk-session-token', testToken);
             window.location.href = '/tiny-world-builder.html';
           }, 1500);
           return;
