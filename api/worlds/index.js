@@ -1,8 +1,8 @@
-import { v4 as uuid } from 'uuid';
-import { query } from '../lib/db.js';
-import { extractUserFromRequest, sendError, sendSuccess } from '../lib/auth.js';
+const { v4: uuid } = require('uuid');
+const { query } = require('../lib/db.js');
+const { extractUserFromRequest, sendError, sendSuccess } = require('../lib/auth.js');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');

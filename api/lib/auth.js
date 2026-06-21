@@ -1,6 +1,6 @@
-import * as jose from 'jose';
+const jose = require('jose');
 
-export async function verifyToken(token) {
+async function verifyToken(token) {
   try {
     const secret = new TextEncoder().encode(process.env.CLERK_SECRET_KEY);
     const verified = await jose.jwtVerify(token, secret);
@@ -11,7 +11,7 @@ export async function verifyToken(token) {
   }
 }
 
-export async function extractUserFromRequest(req) {
+async function extractUserFromRequest(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
@@ -21,10 +21,12 @@ export async function extractUserFromRequest(req) {
   return await verifyToken(token);
 }
 
-export function sendError(res, status, message) {
+function sendError(res, status, message) {
   res.status(status).json({ error: message });
 }
 
-export function sendSuccess(res, data) {
+function sendSuccess(res, data) {
   res.status(200).json(data);
 }
+
+module.exports = { verifyToken, extractUserFromRequest, sendError, sendSuccess };
