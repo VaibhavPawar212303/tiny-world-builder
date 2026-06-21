@@ -915,12 +915,25 @@ const server = http.createServer((req, res) => {
         const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
         if (clerkKey) {
           console.log(`[Dev Server] Injecting Clerk key for ${req.url}: ${clerkKey.substring(0, 20)}...`);
-          const clerkInject = `<script>console.log('[Dev Server] Clerk key injected into page');window.__CLERK_PUBLISHABLE_KEY=${JSON.stringify(clerkKey)};</script>`;
-          injected = injected.includes('</head>')
-            ? injected.replace('</head>', clerkInject + '</head>')
-            : clerkInject + injected;
+          // Replace the clerk-key-injection placeholder with actual key
+          const clerkKeyScript = `window.__CLERK_PUBLISHABLE_KEY=${JSON.stringify(clerkKey)};console.log('[Dev Server] Clerk key injected: ' + ${JSON.stringify(clerkKey.substring(0, 20))} + '...');`;
+          if (injected.includes('id="clerk-key-injection"')) {
+            // Find the script tag and replace its content
+            injected = injected.replace(
+              /<script\s+id="clerk-key-injection">[\s\S]*?<\/script>/,
+              `<script id="clerk-key-injection">${clerkKeyScript}</script>`
+            );
+            console.log(`[Dev Server] ✓ Clerk key injected into #clerk-key-injection script`);
+          } else {
+            // Fallback: inject before </head> if no placeholder found
+            const clerkInject = `<script>${clerkKeyScript}</script>`;
+            injected = injected.includes('</head>')
+              ? injected.replace('</head>', clerkInject + '</head>')
+              : clerkInject + injected;
+            console.log(`[Dev Server] ⚠ Clerk key injected before </head> (no placeholder found)`);
+          }
         } else {
-          console.warn(`[Dev Server] No Clerk key found in environment for ${req.url}`);
+          console.warn(`[Dev Server] ✗ No Clerk key found in environment for ${req.url}`);
           console.warn(`[Dev Server] Set CLERK_PUBLISHABLE_KEY or NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in .env.local`);
         }
 
