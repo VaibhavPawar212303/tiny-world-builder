@@ -1599,37 +1599,67 @@
   </script>
   <script id="tinyworld-auth-bootstrap">
   (function tinyworldAuthBootstrap() {
+    console.log('[Clerk Bootstrap] Starting Clerk key initialization...');
+
     // Set Clerk publishable key from multiple sources (in priority order)
     if (!window.__CLERK_PUBLISHABLE_KEY) {
+      console.log('[Clerk Bootstrap] Searching for Clerk publishable key...');
+
       const publishableKey = (function () {
         try {
           // 1. Check URL parameter
+          console.log('[Clerk Bootstrap] 1. Checking URL parameters...');
           const url = new URL(window.location.href);
           const urlKey = url.searchParams.get('clerk_key');
-          if (urlKey) return urlKey;
+          if (urlKey) {
+            console.log('[Clerk Bootstrap] ✓ Found key in URL parameter');
+            return urlKey;
+          }
+          console.log('[Clerk Bootstrap] ✗ No key in URL parameter');
 
           // 2. Check localStorage
+          console.log('[Clerk Bootstrap] 2. Checking localStorage...');
           const storedKey = localStorage.getItem('clerk_publishable_key');
-          if (storedKey) return storedKey;
+          if (storedKey) {
+            console.log('[Clerk Bootstrap] ✓ Found key in localStorage:', storedKey.substring(0, 20) + '...');
+            return storedKey;
+          }
+          console.log('[Clerk Bootstrap] ✗ No key in localStorage');
 
           // 3. Check if injected by build system (from .env.local or Vercel env)
+          console.log('[Clerk Bootstrap] 3. Checking window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY...');
           if (window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+            console.log('[Clerk Bootstrap] ✓ Found key in window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:',
+              window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
             return window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
           }
+          console.log('[Clerk Bootstrap] ✗ No key in window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
 
           // 4. Try to read from window if set by external script
+          console.log('[Clerk Bootstrap] 4. Checking window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY...');
           if (window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+            console.log('[Clerk Bootstrap] ✓ Found key in window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:',
+              window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
             return window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
           }
+          console.log('[Clerk Bootstrap] ✗ No key in window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
 
           return '';
-        } catch (_) {
+        } catch (err) {
+          console.error('[Clerk Bootstrap] Error searching for key:', err);
           return '';
         }
       })();
+
       if (publishableKey) {
         window.__CLERK_PUBLISHABLE_KEY = publishableKey;
+        console.log('[Clerk Bootstrap] ✓ Key loaded successfully: ' + publishableKey.substring(0, 20) + '...');
+      } else {
+        console.warn('[Clerk Bootstrap] ✗ No Clerk publishable key found in any source');
+        console.warn('[Clerk Bootstrap] Expected sources: URL parameter, localStorage, window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
       }
+    } else {
+      console.log('[Clerk Bootstrap] ✓ Clerk key already set: ' + window.__CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
     }
 
     window.__tinyworldAuthReady = new Promise(function (resolve) {

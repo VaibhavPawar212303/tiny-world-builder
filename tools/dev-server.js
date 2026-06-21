@@ -914,10 +914,14 @@ const server = http.createServer((req, res) => {
         // Inject Clerk publishable key from environment variables
         const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
         if (clerkKey) {
-          const clerkInject = `<script>window.__CLERK_PUBLISHABLE_KEY=${JSON.stringify(clerkKey)};</script>`;
+          console.log(`[Dev Server] Injecting Clerk key for ${req.url}: ${clerkKey.substring(0, 20)}...`);
+          const clerkInject = `<script>console.log('[Dev Server] Clerk key injected into page');window.__CLERK_PUBLISHABLE_KEY=${JSON.stringify(clerkKey)};</script>`;
           injected = injected.includes('</head>')
             ? injected.replace('</head>', clerkInject + '</head>')
             : clerkInject + injected;
+        } else {
+          console.warn(`[Dev Server] No Clerk key found in environment for ${req.url}`);
+          console.warn(`[Dev Server] Set CLERK_PUBLISHABLE_KEY or NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in .env.local`);
         }
 
         // Cluso widget — local dev only, never in committed HTML or dist.

@@ -145,24 +145,36 @@ async function initClerk() {
 
   clerkInitPromise = (async () => {
     try {
+      console.log('[Clerk] Starting Clerk initialization...');
+
       // For local development, skip Clerk auth
       const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      console.log('[Clerk] Development mode:', isDev);
+      console.log('[Clerk] Hostname:', window.location.hostname);
+
       if (isDev) {
-        console.log('[Auth] Development mode - skipping Clerk auth');
+        console.log('[Clerk] ✓ Development mode - skipping Clerk auth');
         hideClerkAuth();
         clerkInitialized = true;
         return true;
       }
 
       const pubKey = window.__CLERK_PUBLISHABLE_KEY;
+      console.log('[Clerk] Searching for Clerk public key...');
+      console.log('[Clerk]   window.__CLERK_PUBLISHABLE_KEY:', pubKey ? '✓ Present (' + pubKey.substring(0, 20) + '...)' : '✗ Missing');
+      console.log('[Clerk]   window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:', window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? '✓ Present' : '✗ Missing');
+      console.log('[Clerk]   window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:', window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? '✓ Present' : '✗ Missing');
 
       if (!pubKey || pubKey === 'undefined') {
+        console.error('[Clerk] ✗ Clerk key not configured');
+        console.error('[Clerk] To fix: Set CLERK_PUBLISHABLE_KEY in .env.local or your environment');
         showClerkError(
           'Clerk is not configured',
           'Please set CLERK_PUBLISHABLE_KEY environment variable.'
         );
         return false;
       }
+      console.log('[Clerk] ✓ Clerk key loaded: ' + pubKey.substring(0, 20) + '...');
 
       // Check if user is already authenticated
       const user = await getUser();
