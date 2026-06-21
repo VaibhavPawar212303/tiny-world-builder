@@ -34,3 +34,6 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+
+# clerk configuration (can include secrets)
+/.clerk/
