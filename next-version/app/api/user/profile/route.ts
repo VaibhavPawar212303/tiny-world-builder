@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { getDatabase, schema } from '@/app/lib/drizzle';
+import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -13,19 +14,21 @@ export async function GET() {
       );
     }
 
-    const results: any = await query(
-      'SELECT * FROM users WHERE clerk_id = ?',
-      [userId]
-    );
+    const db = await getDatabase();
+    const user = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.clerkId, userId))
+      .limit(1);
 
-    if (!Array.isArray(results) || results.length === 0) {
+    if (!user || user.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(results[0]);
+    return NextResponse.json(user[0]);
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json(
@@ -49,24 +52,33 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { email, firstName, lastName } = body;
 
-    // Check if user exists
-    const existing: any = await query(
-      'SELECT * FROM users WHERE clerk_id = ?',
-      [userId]
-    );
+    const db = await getDatabase();
 
-    if (Array.isArray(existing) && existing.length > 0) {
+    // Check if user exists
+    const existing = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.clerkId, userId))
+      .limit(1);
+
+    if (existing && existing.length > 0) {
       // Update existing user
-      await query(
-        'UPDATE users SET email = ?, first_name = ?, last_name = ?, updated_at = NOW() WHERE clerk_id = ?',
-        [email, firstName, lastName, userId]
-      );
+      await db
+        .update(schema.users)
+        .set({
+          email,
+          firstName,
+          lastName,
+        })
+        .where(eq(schema.users.clerkId, userId));
     } else {
       // Create new user
-      await query(
-        'INSERT INTO users (clerk_id, email, first_name, last_name, created_at) VALUES (?, ?, ?, ?, NOW())',
-        [userId, email, firstName, lastName]
-      );
+      await db.insert(schema.users).values({
+        clerkId: userId,
+        email,
+        firstName,
+        lastName,
+      });
     }
 
     return NextResponse.json({ success: true });

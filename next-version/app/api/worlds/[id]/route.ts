@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { getDatabase, schema } from '@/app/lib/drizzle';
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(
   req: Request,
@@ -17,19 +18,21 @@ export async function GET(
       );
     }
 
-    const results: any = await query(
-      'SELECT * FROM worlds WHERE id = ? AND clerk_id = ?',
-      [id, userId]
-    );
+    const db = await getDatabase();
+    const world = await db
+      .select()
+      .from(schema.worlds)
+      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.clerkId, userId)))
+      .limit(1);
 
-    if (!Array.isArray(results) || results.length === 0) {
+    if (!world || world.length === 0) {
       return NextResponse.json(
         { error: 'World not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(results[0]);
+    return NextResponse.json(world[0]);
   } catch (error) {
     console.error('Error fetching world:', error);
     return NextResponse.json(
@@ -57,11 +60,15 @@ export async function PUT(
     const body = await req.json();
     const { title, description, state } = body;
 
-    await query(
-      `UPDATE worlds SET title = ?, description = ?, state = ?, updated_at = NOW()
-       WHERE id = ? AND clerk_id = ?`,
-      [title, description, JSON.stringify(state), id, userId]
-    );
+    const db = await getDatabase();
+    await db
+      .update(schema.worlds)
+      .set({
+        title,
+        description,
+        state,
+      })
+      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.clerkId, userId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -88,10 +95,10 @@ export async function DELETE(
       );
     }
 
-    await query(
-      'DELETE FROM worlds WHERE id = ? AND clerk_id = ?',
-      [id, userId]
-    );
+    const db = await getDatabase();
+    await db
+      .delete(schema.worlds)
+      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.clerkId, userId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {

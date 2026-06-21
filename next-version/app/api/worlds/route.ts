@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { getDatabase, schema } from '@/app/lib/drizzle';
+import { eq, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function GET() {
@@ -14,12 +15,14 @@ export async function GET() {
       );
     }
 
-    const results: any = await query(
-      'SELECT * FROM worlds WHERE clerk_id = ? ORDER BY updated_at DESC',
-      [userId]
-    );
+    const db = await getDatabase();
+    const worlds = await db
+      .select()
+      .from(schema.worlds)
+      .where(eq(schema.worlds.clerkId, userId))
+      .orderBy(desc(schema.worlds.updatedAt));
 
-    return NextResponse.json(Array.isArray(results) ? results : []);
+    return NextResponse.json(worlds || []);
   } catch (error) {
     console.error('Error fetching worlds:', error);
     return NextResponse.json(
@@ -44,11 +47,15 @@ export async function POST(req: Request) {
     const { title, description, state } = body;
     const worldId = uuidv4();
 
-    await query(
-      `INSERT INTO worlds (id, clerk_id, title, description, state, version, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [worldId, userId, title, description, JSON.stringify(state || {}), 1]
-    );
+    const db = await getDatabase();
+    await db.insert(schema.worlds).values({
+      id: worldId,
+      clerkId: userId,
+      title,
+      description,
+      state: state || {},
+      version: 1,
+    });
 
     return NextResponse.json(
       { id: worldId, title, description },
