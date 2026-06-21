@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { VoxelGrid, type Voxel, type GridSize } from '../lib/voxel-grid';
 import { UndoManager, type Action } from '../lib/undo-manager';
+import { BUILDING_PRESETS, placeBuilding } from '../lib/building-presets';
+import { getTool, type Tool } from '../lib/tools';
 
 const COLORS: Record<string, number> = {
   red: 0xff6b6b,
@@ -11,9 +13,11 @@ const COLORS: Record<string, number> = {
   green: 0x95e1d3,
   yellow: 0xffe66d,
   purple: 0xc7b3e5,
+  brown: 0x8b5a32,
+  gray: 0x8f8a82,
 };
 
-const COLOR_NAMES = Object.keys(COLORS);
+const COLOR_NAMES = ['red', 'blue', 'green', 'yellow', 'purple'];
 const COLOR_TO_INDEX: Record<string, number> = {
   red: 1,
   blue: 2,
@@ -26,9 +30,10 @@ interface CanvasProps {
   onVoxelUpdate?: (voxels: Voxel[]) => void;
   initialVoxels?: Voxel[];
   gridSize?: GridSize;
+  selectedTool?: Tool | null;
 }
 
-export function Canvas({ onVoxelUpdate, initialVoxels, gridSize = 16 }: CanvasProps) {
+export function Canvas({ onVoxelUpdate, initialVoxels, gridSize = 16, selectedTool }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -147,6 +152,90 @@ export function Canvas({ onVoxelUpdate, initialVoxels, gridSize = 16 }: CanvasPr
 
     const onContextMenu = (e: MouseEvent) => {
       e.preventDefault();
+    };
+
+    const onDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = 'copy';
+    };
+
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+
+      const toolId = e.dataTransfer?.getData('tool-id');
+      const variantId = e.dataTransfer?.getData('variant-id');
+
+      if (!toolId) return;
+
+      // Get the tool
+      const tool = getTool(toolId);
+      if (!tool) return;
+
+      // Check if it's a building tool
+      const isBuilding = tool.kind === 'house' || tool.kind === 'fence' || tool.kind === 'bridge';
+      if (!isBuilding) return;
+
+      // Get mouse position on canvas
+      const rect = containerRef.current!.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      mouseRef.current.x = (x / rect.width) * 2 - 1;
+      mouseRef.current.y = -(y / rect.height) * 2 + 1;
+
+      raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current!);
+
+      // Create a plane at ground level to find where to place building
+      const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersection = new THREE.Vector3();
+      raycasterRef.current.ray.intersectPlane(groundPlane, intersection);
+
+      // Round to grid coordinates
+      const baseX = Math.floor(intersection.x);
+      const baseZ = Math.floor(intersection.z);
+      const baseY = 0;
+
+      // Place the building voxels
+      let buildingVoxels: Voxel[] = [];
+
+      if (tool.kind === 'house') {
+        const variant = tool.variants?.find(v => v.id === variantId);
+        const buildingType = variant?.buildingType || 'house';
+        const preset = BUILDING_PRESETS[buildingType as keyof typeof BUILDING_PRESETS];
+        if (preset) {
+          buildingVoxels = placeBuilding(preset, baseX, baseY, baseZ);
+        }
+      } else if (tool.kind === 'fence') {
+        // Simple fence placement (2 voxels)
+        buildingVoxels = [
+          { x: baseX, y: baseY, z: baseZ, color: 'red' },
+          { x: baseX + 1, y: baseY, z: baseZ, color: 'red' },
+        ];
+      } else if (tool.kind === 'bridge') {
+        // Simple bridge (3x5)
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 5; j++) {
+            buildingVoxels.push({ x: baseX + i, y: baseY, z: baseZ + j, color: 'purple' });
+          }
+        }
+      }
+
+      // Add building voxels to grid
+      buildingVoxels.forEach(voxel => {
+        gridRef.current.setVoxel(voxel.x, voxel.y, voxel.z, voxel.color);
+        undoManagerRef.current.push({
+          type: 'place',
+          x: voxel.x,
+          y: voxel.y,
+          z: voxel.z,
+          color: voxel.color,
+        });
+      });
+
+      setUndoCount(undoManagerRef.current.getStats().undoCount);
+      setRedoCount(undoManagerRef.current.getStats().redoCount);
+      redrawVoxels(scene);
+      onVoxelUpdate?.(gridRef.current.getAllVoxels());
     };
 
     const onClick = (e: MouseEvent) => {
@@ -297,6 +386,8 @@ export function Canvas({ onVoxelUpdate, initialVoxels, gridSize = 16 }: CanvasPr
     renderer.domElement.addEventListener('mouseup', onMouseUp);
     renderer.domElement.addEventListener('contextmenu', onContextMenu);
     renderer.domElement.addEventListener('click', onClick);
+    renderer.domElement.addEventListener('dragover', onDragOver);
+    renderer.domElement.addEventListener('drop', onDrop);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     window.addEventListener('resize', handleResize);
@@ -310,10 +401,12 @@ export function Canvas({ onVoxelUpdate, initialVoxels, gridSize = 16 }: CanvasPr
       renderer.domElement.removeEventListener('mouseup', onMouseUp);
       renderer.domElement.removeEventListener('contextmenu', onContextMenu);
       renderer.domElement.removeEventListener('click', onClick);
+      renderer.domElement.removeEventListener('dragover', onDragOver);
+      renderer.domElement.removeEventListener('drop', onDrop);
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [gridSize, selectedColor, eraseMode, onVoxelUpdate]);
+  }, [gridSize, selectedColor, eraseMode, onVoxelUpdate, selectedTool]);
 
   const redrawVoxels = (scene: THREE.Scene) => {
     // Remove old instanced mesh

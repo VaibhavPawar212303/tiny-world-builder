@@ -169,7 +169,7 @@ export default function BuilderPage() {
       </header>
 
       <main style={{ flex: 1, background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
-        <Canvas initialVoxels={initialVoxels} onVoxelUpdate={handleVoxelUpdate} gridSize={gridSize} />
+        <Canvas initialVoxels={initialVoxels} onVoxelUpdate={handleVoxelUpdate} gridSize={gridSize} selectedTool={null} />
         <Toolbar onSelectTool={handleSelectTool} />
       </main>
 
