@@ -3,36 +3,6 @@
   "buildCommand": "./publish.sh",
   "outputDirectory": "dist",
   "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/api/health",
-      "destination": "/api/health.js"
-    },
-    {
-      "source": "/api/users/sync",
-      "destination": "/api/users/sync.js"
-    },
-    {
-      "source": "/api/worlds",
-      "destination": "/api/worlds/index.js"
-    },
-    {
-      "source": "/api/worlds/:id",
-      "destination": "/api/worlds/[id].js"
-    },
-    {
-      "source": "/api/worlds/:id/builds",
-      "destination": "/api/worlds/[id]/builds.js"
-    },
-    {
-      "source": "/api/worlds/:id/builds/:buildId/restore",
-      "destination": "/api/worlds/[id]/builds/[buildId]/restore.js"
-    },
-    {
-      "source": "/api/preferences",
-      "destination": "/api/preferences.js"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
