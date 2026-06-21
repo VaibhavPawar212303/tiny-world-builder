@@ -2,10 +2,19 @@
 
 import { useAuth, useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function BuilderPage() {
-  const { userId } = useAuth();
-  const { user, isLoaded } = useUser();
+  const { userId, isLoaded } = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && !userId) {
+      router.push('/sign-in');
+    }
+  }, [isLoaded, userId, router]);
 
   if (!isLoaded) {
     return (
@@ -15,22 +24,9 @@ export default function BuilderPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        background: '#f5f5f5',
       }}>
         <div>Loading builder...</div>
-      </div>
-    );
-  }
-
-  if (!userId) {
-    return (
-      <div style={{
-        width: '100%',
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div>Authentication required</div>
       </div>
     );
   }
