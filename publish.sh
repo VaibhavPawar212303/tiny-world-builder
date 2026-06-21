@@ -59,12 +59,26 @@ mkdir -p "$DIST/assets"
 cp index.html "$DIST/index.html"
 cp tiny-world-builder.html "$DIST/tiny-world-builder.html"
 cp roadmap.html "$DIST/roadmap.html"
+
+# Inject Clerk environment variables into HTML files
+if [[ -n "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}" ]]; then
+  CLERK_INJECT="<script>window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY='$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY';</script>"
+  for html_file in "$DIST"/index.html "$DIST"/tiny-world-builder.html "$DIST"/community.html "$DIST"/admin-users.html "$DIST"/sign-in.html "$DIST"/sign-up.html; do
+    if [[ -f "$html_file" ]]; then
+      # Insert the script right before </head>
+      sed -i "s|</head>|$CLERK_INJECT</head>|g" "$html_file"
+    fi
+  done
+  printf '✓ Injected Clerk environment variables\n'
+fi
 cp news.html "$DIST/news.html"
 cp docs.html "$DIST/docs.html"
 cp doc.html "$DIST/doc.html"
 cp features.html "$DIST/features.html"
 cp community.html "$DIST/community.html"
 cp admin-users.html "$DIST/admin-users.html"
+cp sign-in.html "$DIST/sign-in.html"
+cp sign-up.html "$DIST/sign-up.html"
 cp terms.html "$DIST/terms.html"
 cp privacy.html "$DIST/privacy.html"
 cp code-of-conduct.html "$DIST/code-of-conduct.html"
