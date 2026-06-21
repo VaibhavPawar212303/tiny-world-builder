@@ -31,9 +31,74 @@ module.exports = async function handler(req, res) {
 
     // Route based on path pattern
     // /api/worlds -> handled by index.js
-    // /api/worlds/:id -> handled by [id].js
-    // /api/worlds/:id/builds -> needs to be handled here
-    // /api/worlds/:id/builds/:buildId/restore -> needs to be handled here
+    // /api/worlds/:id -> handled below
+    // /api/worlds/:id/builds -> handled below
+    // /api/worlds/:id/builds/:buildId/restore -> handled below
+
+    // Handle /api/worlds/:id (single world operations)
+    if (!pathStr.includes('/') && req.method === 'GET') {
+      // GET /api/worlds/:id
+      const worldId = pathStr;
+      console.log('[WORLDS-CATCH-ALL] Handling: GET world', worldId);
+
+      const results = await query(
+        'SELECT * FROM worlds WHERE id = ? AND user_id = ?',
+        [worldId, userId]
+      );
+
+      if (results.length === 0) {
+        return sendError(res, 404, 'World not found');
+      }
+
+      const world = results[0];
+      world.state = typeof world.state === 'string' ? JSON.parse(world.state) : world.state;
+      return sendSuccess(res, world);
+    }
+
+    if (!pathStr.includes('/') && req.method === 'PUT') {
+      // PUT /api/worlds/:id
+      const worldId = pathStr;
+      const { title, description, state } = req.body;
+      console.log('[WORLDS-CATCH-ALL] Handling: PUT update world', worldId);
+
+      const results = await query(
+        'SELECT id FROM worlds WHERE id = ? AND user_id = ?',
+        [worldId, userId]
+      );
+
+      if (results.length === 0) {
+        return sendError(res, 404, 'World not found');
+      }
+
+      await query(
+        `UPDATE worlds SET title = ?, description = ?, state = ?, version = version + 1, updated_at = NOW()
+         WHERE id = ? AND user_id = ?`,
+        [title || '', description || '', JSON.stringify(state || {}), worldId, userId]
+      );
+
+      console.log('[WORLDS-CATCH-ALL] World updated');
+      return sendSuccess(res, { success: true });
+    }
+
+    if (!pathStr.includes('/') && req.method === 'DELETE') {
+      // DELETE /api/worlds/:id
+      const worldId = pathStr;
+      console.log('[WORLDS-CATCH-ALL] Handling: DELETE world', worldId);
+
+      const results = await query(
+        'SELECT id FROM worlds WHERE id = ? AND user_id = ?',
+        [worldId, userId]
+      );
+
+      if (results.length === 0) {
+        return sendError(res, 404, 'World not found');
+      }
+
+      await query('DELETE FROM worlds WHERE id = ? AND user_id = ?', [worldId, userId]);
+
+      console.log('[WORLDS-CATCH-ALL] World deleted');
+      return sendSuccess(res, { success: true });
+    }
 
     if (pathStr.endsWith('/builds') && req.method === 'GET') {
       // GET /api/worlds/:id/builds
