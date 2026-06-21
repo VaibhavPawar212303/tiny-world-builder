@@ -145,6 +145,15 @@ async function initClerk() {
 
   clerkInitPromise = (async () => {
     try {
+      // For local development, skip Clerk auth
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isDev) {
+        console.log('[Auth] Development mode - skipping Clerk auth');
+        hideClerkAuth();
+        clerkInitialized = true;
+        return true;
+      }
+
       const pubKey = window.__CLERK_PUBLISHABLE_KEY;
 
       if (!pubKey || pubKey === 'undefined') {
