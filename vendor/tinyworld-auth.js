@@ -113,11 +113,15 @@ function redirectToClerkSignIn(publishableKey) {
 }
 
 function setupSignInButton() {
+  console.log('[Auth] setupSignInButton called');
   const authContainer = document.getElementById('clerk-auth-container');
   const signInRoot = document.getElementById('clerk-sign-in-root');
 
+  console.log('[Auth] Auth container:', authContainer ? '✓ Found' : '✗ Not found');
+  console.log('[Auth] Sign-in root:', signInRoot ? '✓ Found' : '✗ Not found');
+
   if (!authContainer || !signInRoot) {
-    console.log('[Auth] Auth container not found on this page');
+    console.error('[Auth] Auth container not found on this page');
     return;
   }
 
@@ -248,7 +252,10 @@ async function initClerk() {
       console.log('[Clerk] ✓ Clerk key loaded: ' + pubKey.substring(0, 20) + '...');
 
       // Check if user is already authenticated
+      console.log('[Clerk] Checking if user is already authenticated...');
       const user = await getUser();
+      console.log('[Clerk] getUser returned:', user ? 'User found: ' + user.email : 'No user');
+
       if (user) {
         console.log('[Auth] User already signed in:', user.email);
         hideClerkAuth();
@@ -257,7 +264,9 @@ async function initClerk() {
       }
 
       // Show sign-in/sign-up buttons
+      console.log('[Clerk] Calling setupSignInButton...');
       setupSignInButton();
+      console.log('[Clerk] setupSignInButton returned');
 
       clerkInitialized = true;
       return true;
