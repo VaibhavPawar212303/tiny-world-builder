@@ -41,12 +41,15 @@ export default function WorldsPage() {
     loadWorlds();
   }, [isLoaded]);
 
-  const handleCreateWorld = async () => {
+  const [gridSizeModal, setGridSizeModal] = useState(false);
+  const [selectedGridSize, setSelectedGridSize] = useState<'16' | '32' | '64'>('16');
+
+  const handleCreateWorld = async (gridSize?: '16' | '32' | '64') => {
     setCreating(true);
     try {
       const newWorld = {
         title: 'New World',
-        description: 'A fresh world waiting to be built',
+        description: `A fresh ${gridSize || selectedGridSize}×${gridSize || selectedGridSize} world waiting to be built`,
         state: {},
       };
 
@@ -58,6 +61,7 @@ export default function WorldsPage() {
 
       if (res.ok) {
         const data = await res.json();
+        setGridSizeModal(false);
         router.push(`/builder?id=${data.id}`);
       }
     } catch (error) {
@@ -127,7 +131,7 @@ export default function WorldsPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Create World Button */}
           <button
-            onClick={handleCreateWorld}
+            onClick={() => setGridSizeModal(true)}
             disabled={creating}
             style={{
               padding: '12px 24px',
@@ -241,6 +245,92 @@ export default function WorldsPage() {
           )}
         </div>
       </main>
+
+      {/* Grid Size Modal */}
+      {gridSizeModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+          }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', fontWeight: '600' }}>
+              Choose Grid Size
+            </h2>
+            <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#666' }}>
+              Select the size of your voxel world. Larger grids support more complex creations.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              {(['16', '32', '64'] as const).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setSelectedGridSize(size)}
+                  style={{
+                    padding: '16px',
+                    background: selectedGridSize === size ? '#4ecdc4' : '#f5f5f5',
+                    color: selectedGridSize === size ? '#fff' : '#333',
+                    border: selectedGridSize === size ? 'none' : '1px solid #ddd',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '16px',
+                  }}
+                >
+                  {size} × {size} ({parseInt(size) * parseInt(size) * parseInt(size)} voxels)
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => handleCreateWorld(selectedGridSize)}
+                disabled={creating}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: '#4ecdc4',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  opacity: creating ? 0.6 : 1,
+                }}
+              >
+                {creating ? 'Creating...' : 'Create'}
+              </button>
+              <button
+                onClick={() => setGridSizeModal(false)}
+                disabled={creating}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: '#f0f0f0',
+                  color: '#333',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

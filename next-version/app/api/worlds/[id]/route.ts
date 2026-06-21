@@ -58,16 +58,18 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { title, description, state } = body;
+    const { title, description, state, shareId } = body;
 
     const db = await getDatabase();
+    const updateData: Record<string, unknown> = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (state !== undefined) updateData.state = state;
+    if (shareId !== undefined) updateData.shareId = shareId;
+
     await db
       .update(schema.worlds)
-      .set({
-        title,
-        description,
-        state,
-      })
+      .set(updateData)
       .where(and(eq(schema.worlds.id, id), eq(schema.worlds.userId, userId)));
 
     return NextResponse.json({ success: true });

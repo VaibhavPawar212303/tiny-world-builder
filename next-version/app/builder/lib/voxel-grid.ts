@@ -5,14 +5,16 @@ export interface Voxel {
   color: string;
 }
 
+export type GridSize = 16 | 32 | 64;
+
 export class VoxelGrid {
   private voxels: Map<string, Voxel> = new Map();
-  readonly size: number;
-  readonly maxHeight: number;
+  readonly size: GridSize;
+  readonly maxHeight: GridSize;
 
-  constructor(size: number = 16, maxHeight: number = 16) {
+  constructor(size: GridSize = 16, maxHeight?: GridSize) {
     this.size = size;
-    this.maxHeight = maxHeight;
+    this.maxHeight = maxHeight || size;
   }
 
   private getKey(x: number, y: number, z: number): string {
@@ -76,6 +78,7 @@ export class VoxelGrid {
     return {
       voxelCount: this.voxels.size,
       maxCapacity: this.size * this.size * this.maxHeight,
+      fillPercentage: (this.voxels.size / (this.size * this.size * this.maxHeight)) * 100,
     };
   }
 }
