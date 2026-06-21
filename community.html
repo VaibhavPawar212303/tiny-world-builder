@@ -12,21 +12,28 @@
 <link rel="stylesheet" href="styles/landing.css" />
 <script>
   // Auth bootstrap — mirrors tiny-world-builder.html so the community page can
-  // sign users in directly (Netlify Identity) without bouncing to the builder.
+  // sign users in directly (Clerk) without bouncing to the builder.
   (function communityAuthBootstrap() {
+    // Set Clerk publishable key from environment or inline config
+    if (!window.__CLERK_PUBLISHABLE_KEY) {
+      const publishableKey = (function () {
+        try {
+          const url = new URL(window.location.href);
+          return url.searchParams.get('clerk_key') || localStorage.getItem('clerk_publishable_key') || '';
+        } catch (_) {
+          return '';
+        }
+      })();
+      if (publishableKey) {
+        window.__CLERK_PUBLISHABLE_KEY = publishableKey;
+      }
+    }
+
     window.__tinyworldAuthReady = new Promise(function (resolve) {
       window.__resolveTinyWorldAuthReady = resolve;
-      setTimeout(function () { resolve(false); }, 2500);
+      setTimeout(function () { resolve(false); }, 5000);
     });
   })();
-</script>
-<script id="tinyworld-auth-importmap" type="importmap">
-{
-  "imports": {
-    "@netlify/identity": "./vendor/netlify/identity.js",
-    "gotrue-js": "./vendor/netlify/gotrue.js"
-  }
-}
 </script>
 <script src="engine/world/00-custom-confirm.js"></script>
 <script type="module" src="vendor/tinyworld-auth.js"></script>
@@ -359,6 +366,18 @@
 </style>
 </head>
 <body class="landing-page">
+  <!-- Clerk Auth Modal -->
+  <div id="clerk-auth-container" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;font-family:system-ui,-apple-system,sans-serif">
+    <div id="clerk-auth-modal" style="background:white;border-radius:12px;padding:48px;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:420px;width:90%;text-align:center">
+      <h1 style="margin:0 0 24px;font-size:28px;font-weight:700">Sign in to Community</h1>
+      <div id="clerk-sign-in-root" style="min-height:300px;display:flex;align-items:center;justify-content:center">
+        <div style="color:#666;font-size:14px">
+          <p>Initializing...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <header class="site-header" aria-label="Tiny World Builder">
     <a class="site-logo" href="/" aria-label="Tiny World Builder home">
       <img src="assets/twlogo-wordmark.png" alt="Tiny World Builder" width="1064" height="403" />
@@ -722,7 +741,7 @@
     'use strict';
 
     // ---- auth: reuse the same token sources the app uses ----
-    // 1) wallet session token in localStorage, 2) Netlify Identity nf_jwt cookie.
+    // 1) wallet session token in localStorage, 2) Clerk session token.
     const TW_WALLET_SESSION_KEY = 'tinyworld:auth:wallet-session.v1';
     function walletSessionToken() {
       try { return localStorage.getItem(TW_WALLET_SESSION_KEY) || ''; } catch (_) { return ''; }
@@ -746,7 +765,7 @@
     function setWalletSessionToken(t) { try { localStorage.setItem(TW_WALLET_SESSION_KEY, t || ''); } catch (_) {} }
     function clearWalletSessionToken() { try { localStorage.removeItem(TW_WALLET_SESSION_KEY); } catch (_) {} }
 
-    // ---- login (email via Netlify Identity, or Phantom wallet) ----
+    // ---- login (email via Clerk, or Phantom wallet) ----
     // Reuses the same vendored auth bridge + /api/wallet flow as the builder, so
     // people can sign in here without bouncing to /tiny-world-builder.
     let loginMode = 'login'; // 'login' | 'signup'
@@ -1600,7 +1619,7 @@
       location.reload();
     }
     byId('me-chip').addEventListener('click', async () => {
-      if (!state.me) return;
+      // Allow logout even if profile is still loading
       const confirmed = await window.twConfirm({
         title: 'Sign out?',
         message: 'Sign out of Tiny World Builder on this browser?',

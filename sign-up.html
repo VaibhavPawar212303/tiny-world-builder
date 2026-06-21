@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up - Tiny World Builder</title>
+  <link rel="icon" href="assets/twlogo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 420px;
+      padding: 48px;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .auth-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .auth-header p {
+      color: #666;
+      font-size: 14px;
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .form-group input {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .auth-button {
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .auth-button:hover {
+      background: #5568d3;
+    }
+    .auth-button:active {
+      transform: scale(0.98);
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: #999;
+      font-size: 13px;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #ddd;
+    }
+    .auth-link {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    .auth-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .auth-link a:hover {
+      text-decoration: underline;
+    }
+    .error-message {
+      padding: 12px;
+      background: #fee;
+      color: #d32f2f;
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    .loading.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1>Create Account</h1>
+      <p>Join the Tiny World Builder community</p>
+    </div>
+
+    <div class="error-message" id="error-msg"></div>
+
+    <form class="auth-form" id="signup-form">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name" required />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="your@email.com" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required minlength="8" />
+        <small style="color: #999; font-size: 12px;">At least 8 characters</small>
+      </div>
+      <button type="submit" class="auth-button">Sign Up</button>
+    </form>
+
+    <div class="loading" id="loading">
+      <p>Creating account...</p>
+    </div>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-link">
+      Already have an account? <a href="/sign-in.html">Sign in</a>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.getElementById('signup-form');
+      const errorMsg = document.getElementById('error-msg');
+      const loading = document.getElementById('loading');
+
+      function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.classList.add('show');
+        loading.classList.remove('show');
+      }
+
+      function showLoading() {
+        errorMsg.classList.remove('show');
+        loading.classList.add('show');
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading();
+
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+          // Validate password length
+          if (password.length < 8) {
+            throw new Error('Password must be at least 8 characters');
+          }
+
+          // For now, just store in localStorage for demo
+          // In production, this would call your backend API
+          const userData = {
+            name,
+            email,
+            createdAt: new Date().toISOString(),
+          };
+          localStorage.setItem('tinyworld:user', JSON.stringify(userData));
+          localStorage.setItem('gotrue.user', JSON.stringify({
+            email,
+            user_metadata: { full_name: name, email }
+          }));
+
+          // Store auth token
+          localStorage.setItem('tinyworld:auth_token', 'demo_token_' + Date.now());
+
+          // Redirect to builder
+          window.location.href = '/tiny-world-builder.html';
+        } catch (err) {
+          showError(err.message || 'Sign up failed. Please try again.');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -15,19 +15,26 @@
 <link rel="preload" as="image" href="assets/landing-hero.png" />
 <script>
   (function landingAuthBootstrap() {
+    // Set Clerk publishable key from environment or inline config
+    if (!window.__CLERK_PUBLISHABLE_KEY) {
+      const publishableKey = (function () {
+        try {
+          const url = new URL(window.location.href);
+          return url.searchParams.get('clerk_key') || localStorage.getItem('clerk_publishable_key') || '';
+        } catch (_) {
+          return '';
+        }
+      })();
+      if (publishableKey) {
+        window.__CLERK_PUBLISHABLE_KEY = publishableKey;
+      }
+    }
+
     window.__tinyworldAuthReady = new Promise(function (resolve) {
       window.__resolveTinyWorldAuthReady = resolve;
-      setTimeout(function () { resolve(false); }, 2500);
+      setTimeout(function () { resolve(false); }, 5000);
     });
   })();
-</script>
-<script id="tinyworld-auth-importmap" type="importmap">
-{
-  "imports": {
-    "@netlify/identity": "./vendor/netlify/identity.js",
-    "gotrue-js": "./vendor/netlify/gotrue.js"
-  }
-}
 </script>
 <script type="module" src="vendor/tinyworld-auth.js"></script>
 </head>

@@ -97,6 +97,36 @@
     render(readStoredUser());
   }
 
+  // Handle logout click on landing pages
+  chip.addEventListener('click', function (e) {
+    if (!readStoredUser()) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Show logout confirmation
+    if (typeof window.confirm === 'function') {
+      const confirmed = window.confirm('Sign out of Tiny World Builder on this browser?');
+      if (confirmed) {
+        // Call logout
+        var Auth = window.TinyWorldAuth;
+        if (Auth && typeof Auth.logout === 'function') {
+          Promise.resolve(Auth.logout()).then(function () {
+            // Redirect to home after logout
+            window.location.href = '/';
+          }).catch(function () {
+            window.location.href = '/';
+          });
+        } else {
+          // Fallback: clear localStorage and reload
+          window.localStorage.removeItem('tinyworld:user');
+          window.localStorage.removeItem('tinyworld:auth_token');
+          window.localStorage.removeItem('gotrue.user');
+          window.location.href = '/';
+        }
+      }
+    }
+  });
+
   window.addEventListener('storage', function (event) {
     if (!event || event.key === 'gotrue.user') refresh();
   });

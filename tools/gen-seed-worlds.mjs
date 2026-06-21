@@ -3,13 +3,8 @@
 // worlds with different resource strengths (fishing / mining / farming / mixed),
 // each procedurally laid out from a per-world seed so they are all different.
 //
-//   node tools/gen-seed-worlds.mjs > netlify/database/migrations/20260607122000_reseed_worlds.sql
-//
-// Deterministic: re-running produces the same SQL. This is a SEPARATE migration
-// from the original seed (20260607121000) — migrations are immutable once applied
-// (Netlify tracks their checksums), so we never edit that file; this one clears
-// the original placeholder seed and inserts the curated collection instead.
-// The claim flow never INSERTs worlds, so these files define the universe supply.
+// Deterministic: re-running produces the same SQL.
+// The claim flow never INSERTs worlds, so these seeds define the universe supply.
 
 function mulberry32(seed) {
   let a = seed >>> 0;

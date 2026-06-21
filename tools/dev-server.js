@@ -31,7 +31,6 @@ const WATCH_EXTS = new Set(['.html', '.js', '.mjs', '.css', '.json']);
 const WATCH_PATHS = [
   path.resolve(root, 'engine'),
   path.resolve(root, 'styles'),
-  path.resolve(root, 'netlify', 'functions'),
 ];
 const WATCH_ROOT_FILES = [
   'index.html', 'tiny-world-builder.html', 'roadmap.html',
@@ -74,10 +73,9 @@ const CLUSO_HEAD = `<link rel="stylesheet" href="/cluso/cluso-embed.css">
 const CLUSO_BODY = `<div id="root" style="position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;"></div>`;
 const clusoEmbedAvailable = fs.existsSync(path.resolve(root, 'cluso', 'cluso-embed.js'));
 
-function loadEnvFile() {
-  const envPath = path.resolve(root, '.env');
-  if (!fs.existsSync(envPath)) return;
-  const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
@@ -91,7 +89,8 @@ function loadEnvFile() {
   }
 }
 
-loadEnvFile();
+loadEnvFile(path.resolve(root, '.env'));
+loadEnvFile(path.resolve(root, '.env.local'));
 
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -734,7 +733,7 @@ async function handleEnhanceVoxelBuild(req, res) {
 
 function routeForRequest(reqUrl) {
   const parsed = new URL(reqUrl, 'http://localhost');
-  const pathname = decodeURIComponent(parsed.pathname);
+  let pathname = decodeURIComponent(parsed.pathname);
 
   // Normal access: show the temporary landing page. The editor remains at
   // /tiny-world-builder for direct testing and production parity.
@@ -743,8 +742,26 @@ function routeForRequest(reqUrl) {
     return { file: path.resolve(root, 'tiny-world-builder.html') };
   }
 
-  const resolved = path.resolve(root, '.' + pathname);
+  // Try exact path first
+  let resolved = path.resolve(root, '.' + pathname);
   if (!resolved.startsWith(root + path.sep) && resolved !== root) return null;
+
+  // Security check
+  if (!resolved.startsWith(root + path.sep) && resolved !== root) return null;
+
+  // Check if file exists as-is
+  if (fs.existsSync(resolved)) {
+    return { file: resolved };
+  }
+
+  // Try adding .html extension for routes like /community -> community.html
+  if (!pathname.endsWith('.html') && !pathname.endsWith('/')) {
+    const htmlPath = resolved + '.html';
+    if (fs.existsSync(htmlPath)) {
+      return { file: htmlPath };
+    }
+  }
+
   return { file: resolved };
 }
 
@@ -893,6 +910,16 @@ const server = http.createServer((req, res) => {
       fs.readFile(file, 'utf8', (readErr, content) => {
         if (readErr) { send(res, 500, 'Read error'); return; }
         let injected = content;
+
+        // Inject Clerk publishable key from environment variables
+        const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
+        if (clerkKey) {
+          const clerkInject = `<script>window.__CLERK_PUBLISHABLE_KEY=${JSON.stringify(clerkKey)};</script>`;
+          injected = injected.includes('</head>')
+            ? injected.replace('</head>', clerkInject + '</head>')
+            : clerkInject + injected;
+        }
+
         // Cluso widget — local dev only, never in committed HTML or dist.
         if (clusoEmbedAvailable) {
           injected = injected.includes('</head>')

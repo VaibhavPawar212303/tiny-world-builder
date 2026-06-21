@@ -8,7 +8,6 @@ const htmlPath = path.join(root, 'tiny-world-builder.html');
 const cssPath = path.join(root, 'styles', 'tiny-world.css');
 const schemaPath = path.join(root, 'world.schema.json');
 const vercelPath = path.join(root, 'vercel.json');
-const netlifyPath = path.join(root, 'netlify.toml');
 const partykitPath = path.join(root, 'partykit.json');
 const publishPath = path.join(root, 'publish.sh');
 const readText = (file) => fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
@@ -504,8 +503,8 @@ for (const id of ['tips-toggle', 'render-settings', 'import', 'export', 'reset',
     fail('utility chrome icon must live in the left side rail: ' + id);
   }
 }
-if (/<div class="token-pill"/.test(htmlRaw) || !/<div class="token-corner"[\s\S]*id="github-link"[\s\S]*class="token-corner-text"[\s\S]*class="ticker"[\s\S]*\$TINYWORLD[\s\S]*class="ca"[\s\S]*CA:/.test(htmlRaw)) {
-  fail('GitHub icon must sit beside simple $TINYWORLD corner text without a token pill panel');
+if (/<div class="token-pill"/.test(htmlRaw) || !/<div class="github-link-corner"[\s\S]*id="github-link"/.test(htmlRaw)) {
+  fail('GitHub link icon must be present in top-right corner');
 }
 if (!/<div class="appbar">\s*<div class="language-picker" id="language-picker"[\s\S]*id="language-trigger"[\s\S]*aria-controls="language-menu"[\s\S]*<div class="language-menu" id="language-menu"[\s\S]*role="menu"[\s\S]*class="language-option"[\s\S]*data-lang="zh"/.test(htmlRaw) || /id="lang-flags"|class="lang-flag"/.test(htmlRaw)) {
   fail('bottom-left appbar language switcher must be one trigger button with an expandable language menu');
@@ -890,30 +889,14 @@ if (!headers.some(h => h.key === 'Content-Security-Policy' && /script-src 'self'
   fail('vercel.json missing self-hosted runtime CSP');
 }
 
-let netlifyText;
-try {
-  netlifyText = fs.readFileSync(netlifyPath, 'utf8');
-} catch (err) {
-  fail('netlify.toml missing or unreadable: ' + err.message);
-}
-for (const [needle, label] of [
-  ['command = "./publish.sh"', 'Netlify build command'],
-  ['publish = "dist"', 'Netlify publish directory'],
-  ['NODE_VERSION = "22"', 'Netlify Node version'],
-  ['directory = "netlify/functions"', 'Netlify functions directory'],
-  ['Content-Security-Policy = "default-src', 'Netlify CSP header'],
-  ['script-src \'self\'', 'Netlify self-hosted script policy'],
-]) {
-  if (!netlifyText.includes(needle)) fail('netlify.toml missing ' + label);
-}
 if (!/id="tinyworld-auth-importmap"/.test(htmlRaw) || !/vendor\/tinyworld-auth\.js/.test(htmlRaw)) {
-  fail('Netlify Identity browser bridge must be loaded from self-hosted vendor files');
+  fail('auth module must be loaded from vendor/tinyworld-auth.js');
 }
 if (!/window\.__tinyworldAuthReady/.test(html) || !/window\.__tinyworldAuthBootWaited/.test(html)) {
   fail('auth boot must wait for the module bridge before falling back to anonymous mode');
 }
 if (!/Authorization'?\]\s*=/.test(html) && !/opts\.headers\.Authorization\s*=/.test(html)) {
-  fail('cloud account API calls must send the Netlify Identity bearer token');
+  fail('cloud account API calls must send the auth bearer token');
 }
 if (!/data-action="share"/.test(htmlRaw) || !/\/api\/share/.test(html)) {
   fail('world menu must expose share URL creation through /api/share');
@@ -921,20 +904,11 @@ if (!/data-action="share"/.test(htmlRaw) || !/\/api\/share/.test(html)) {
 if (!/data-action="collaborate"/.test(htmlRaw) || !/worldMenuCollaborateUrl/.test(html) || !/searchParams\.set\('party'/.test(html)) {
   fail('world menu must expose collaborate URL creation through share id + PartyKit room id');
 }
-if (!/<div[^>]+id="wallet-payment-section"[^>]+hidden[^>]+data-feature-hidden="wallet-payment"/.test(htmlRaw)) {
-  fail('wallet payment UI must remain hidden until payments are re-enabled');
-}
 if (!/<div[^>]+id="voice-section"[^>]+hidden[^>]+data-feature-hidden="livekit-voice"/.test(htmlRaw)) {
   fail('LiveKit voice UI must remain hidden until voice is re-enabled');
 }
 if (!/params\.get\('share'\)/.test(html) || !/\/api\/share\?id=/.test(html)) {
   fail('shared worlds must load from ?share= ids through the same-origin API');
-}
-if (!/ws: wss:/.test(netlifyText)) {
-  fail('Netlify CSP must permit PartyKit websocket connections');
-}
-if (!/script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'/.test(netlifyText) || !/worker-src 'self' blob:/.test(netlifyText) || !/connect-src 'self' blob: data: https: http: ws: wss:/.test(netlifyText)) {
-  fail('Netlify CSP must permit GLB blob URLs, Draco workers, and WASM decoders');
 }
 if (!/wasm-unsafe-eval/.test(JSON.stringify(headers)) || !/worker-src 'self' blob:/.test(JSON.stringify(headers)) || !/connect-src 'self' blob: data: https: http: ws: wss:/.test(JSON.stringify(headers))) {
   fail('Vercel CSP must permit GLB blob URLs, Draco workers, and WASM decoders');
@@ -960,42 +934,6 @@ if (!/<label[^>]+id="import"[^>]+for="import-file"/.test(htmlRaw) || !/id="impor
 const twPickJSONFileBody = sourceFunctionBody(html, 'twPickJSONFile');
 if (/setTimeout\(\(\) => \{ if \(input\.parentNode\) input\.parentNode\.removeChild\(input\); \}, 1000\)/.test(twPickJSONFileBody) || !/input\.addEventListener\('cancel'/.test(twPickJSONFileBody)) {
   fail('dynamic JSON file pickers must not remove the input before the native picker returns');
-}
-for (const file of [
-  'netlify/functions/profile.mjs',
-  'netlify/functions/builds.mjs',
-  'netlify/functions/share.mjs',
-  'netlify/functions/assets.mjs',
-  'netlify/functions/lib/auth.mjs',
-  'netlify/functions/lib/db.mjs',
-  'netlify/database/migrations/20260510230951_create_builds_and_profiles_tables/migration.sql',
-  'netlify/database/migrations/20260510234708_familiar_penance/migration.sql',
-  'netlify/database/migrations/20260531120000_tinyworld_accounts.sql',
-  'netlify/database/migrations/20260531124500_tinyworld_asset_libraries.sql',
-]) {
-  if (!fs.existsSync(path.join(root, file))) fail('Netlify account backend missing: ' + file);
-}
-const buildsFunction = fs.readFileSync(path.join(root, 'netlify/functions/builds.mjs'), 'utf8');
-if (!/request\.method === 'PUT'/.test(buildsFunction) || !/updated_at = NOW\(\)/.test(buildsFunction)) {
-  fail('/api/builds must update existing cloud worlds for local world sync');
-}
-const shareFunction = fs.readFileSync(path.join(root, 'netlify/functions/share.mjs'), 'utf8');
-if (!/export const config = \{ path: '\/api\/share' \}/.test(shareFunction) || !/world_shares/.test(shareFunction)) {
-  fail('/api/share function must store public share records');
-}
-const assetsFunction = fs.readFileSync(path.join(root, 'netlify/functions/assets.mjs'), 'utf8');
-if (!/export const config = \{ path: '\/api\/assets' \}/.test(assetsFunction) || !/asset_libraries/.test(assetsFunction)) {
-  fail('/api/assets function must persist the authenticated asset library');
-}
-const accountMigration = fs.readFileSync(path.join(root, 'netlify/database/migrations/20260531120000_tinyworld_accounts.sql'), 'utf8');
-for (const table of ['profiles', 'builds', 'world_shares']) {
-  if (!new RegExp('CREATE TABLE IF NOT EXISTS ' + table).test(accountMigration)) {
-    fail('account migration missing table: ' + table);
-  }
-}
-const assetMigration = fs.readFileSync(path.join(root, 'netlify/database/migrations/20260531124500_tinyworld_asset_libraries.sql'), 'utf8');
-if (!/CREATE TABLE IF NOT EXISTS asset_libraries/.test(assetMigration)) {
-  fail('asset library migration missing table');
 }
 if (!fs.existsSync(partykitPath)) fail('partykit.json missing');
 const partykitConfig = fs.readFileSync(partykitPath, 'utf8');

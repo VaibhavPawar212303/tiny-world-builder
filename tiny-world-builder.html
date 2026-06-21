@@ -41,6 +41,19 @@
 </script>
 </head>
 <body>
+  <!-- Clerk Auth Modal -->
+  <div id="clerk-auth-container" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;font-family:system-ui,-apple-system,sans-serif">
+    <div id="clerk-auth-modal" style="background:white;border-radius:12px;padding:48px;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:420px;width:90%;text-align:center">
+      <h1 style="margin:0 0 24px;font-size:28px;font-weight:700">Sign in to Tiny World Builder</h1>
+      <div id="clerk-sign-in-root" style="min-height:300px;display:flex;align-items:center;justify-content:center">
+        <div style="color:#666;font-size:14px">
+          <p>Redirecting to sign in...</p>
+          <p style="font-size:12px;margin-top:12px;color:#999">If not redirected, please <a href="#" id="manual-signin-link" style="color:#0066cc;text-decoration:none">click here</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="app"></div>
   <div id="root" style="position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;"></div>
   <div id="cloud-layer"></div>
@@ -115,11 +128,10 @@
     </button>
   </div>
 
-  <div class="token-corner" title="Solana token">
-    <a class="btn icon token-github-link" id="github-link" data-pos-type="neutral" href="https://github.com/jasonkneen/tiny-world-builder" target="_blank" rel="noopener noreferrer" data-tooltip="View on GitHub" data-i18n-tooltip="appbar.github" aria-label="View Tiny World Builder on GitHub">
+  <div class="github-link-corner">
+    <a class="btn icon" id="github-link" data-pos-type="neutral" href="https://github.com/jasonkneen/tiny-world-builder" target="_blank" rel="noopener noreferrer" data-tooltip="View on GitHub" data-i18n-tooltip="appbar.github" aria-label="View Tiny World Builder on GitHub">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5a13.4 13.4 0 0 0-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5a4.8 4.8 0 0 0-1 3.5v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg>
     </a>
-    <span class="token-corner-text"><span class="ticker">$TINYWORLD</span><span class="token-sep">·</span><span class="ca">CA: 7bK4jRMa3aY85wJMQEQqWsmY9mmrRT32AFWZ23cBpump</span></span>
   </div>
 
   <!-- View modes popup -->
@@ -543,7 +555,6 @@
       <div class="tab-bar">
         <button type="button" id="tab-profile" class="active">Profile</button>
         <button type="button" id="tab-saves">My Worlds</button>
-        <button type="button" id="tab-wallet">Wallet</button>
         <button type="button" id="tab-players">Players</button>
         <button type="button" id="tab-api">Developer</button>
       </div>
@@ -591,37 +602,6 @@
         <ul class="saves-list" id="saves-list"></ul>
         <div class="save-empty" id="saves-empty" hidden>No saved worlds yet. Build one and save it above.</div>
       </div>
-      <div id="panel-wallet" hidden>
-        <div class="profile-section">
-          <div class="wallet-summary">
-            <div>
-              <span class="wallet-kicker">Phantom</span>
-              <strong id="wallet-address">Not connected</strong>
-              <span id="wallet-token-count">TINYWORLD: 0</span>
-            </div>
-            <span id="wallet-status" class="wallet-status">Offline</span>
-          </div>
-          <div class="wallet-actions">
-            <button class="btn" id="wallet-connect" type="button">Connect Phantom</button>
-            <button class="btn" id="wallet-refresh" type="button">Refresh</button>
-            <button class="btn" id="wallet-disconnect" type="button">Disconnect</button>
-          </div>
-        </div>
-        <div class="profile-section" id="wallet-payment-section" hidden data-feature-hidden="wallet-payment">
-          <label>Payment
-            <div class="wallet-payment-row">
-              <input type="text" id="wallet-payment-amount" inputmode="decimal" placeholder="Amount" />
-              <button class="btn" id="wallet-payment-create" type="button">Create payment</button>
-            </div>
-            <a class="wallet-payment-link" id="wallet-payment-link" href="" hidden>Open payment</a>
-          </label>
-        </div>
-        <div class="profile-section">
-          <label>Wallet activity</label>
-          <ul class="wallet-activity-list" id="wallet-activity-list"></ul>
-          <div class="save-empty wallet-empty" id="wallet-activity-empty">No wallet activity loaded.</div>
-        </div>
-      </div>
       <div id="panel-players" hidden>
         <div class="profile-section">
           <div class="players-stats" id="players-stats"></div>
@@ -641,7 +621,7 @@
               <input type="text" id="party-name" maxlength="80" placeholder="Party name" />
               <button class="btn" id="party-create" type="button">Create party</button>
             </div>
-            <a class="wallet-payment-link" id="party-link" href="" hidden>Open party room</a>
+            <a class="party-link" id="party-link" href="" hidden>Open party room</a>
           </label>
         </div>
         <div class="profile-section" id="voice-section" hidden data-feature-hidden="livekit-voice">
@@ -697,17 +677,6 @@
 
       <!-- Login form -->
       <form id="auth-login" class="auth-form" onsubmit="return false">
-        <div class="auth-wallet-section">
-          <button class="auth-wallet-btn" id="auth-wallet-login" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 7.5h11.8a2.7 2.7 0 0 1 0 5.4H9.2"/>
-              <path d="M17 12.9h1.5a2.3 2.3 0 0 1 0 4.6H5"/>
-              <path d="M8.5 10.2 5 12l3.5 1.8"/>
-              <path d="M15.5 15.2 19 17l-3.5 1.8"/>
-            </svg>
-            <span class="auth-wallet-label">Sign in with Phantom</span>
-          </button>
-        </div>
         <div id="auth-oauth-login" class="auth-oauth-section" hidden>
           <button class="auth-oauth-btn" id="auth-google-login" type="button" data-provider="google" hidden>
             <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.01 24.01 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -1630,19 +1599,40 @@
   </script>
   <script id="tinyworld-auth-bootstrap">
   (function tinyworldAuthBootstrap() {
+    // Set Clerk publishable key from multiple sources (in priority order)
+    if (!window.__CLERK_PUBLISHABLE_KEY) {
+      const publishableKey = (function () {
+        try {
+          // 1. Check URL parameter
+          const url = new URL(window.location.href);
+          const urlKey = url.searchParams.get('clerk_key');
+          if (urlKey) return urlKey;
+
+          // 2. Check localStorage
+          const storedKey = localStorage.getItem('clerk_publishable_key');
+          if (storedKey) return storedKey;
+
+          // 3. Check if injected by build system (from .env.local)
+          // This would be set by a build process or development server
+          if (window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+            return window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+          }
+
+          return '';
+        } catch (_) {
+          return '';
+        }
+      })();
+      if (publishableKey) {
+        window.__CLERK_PUBLISHABLE_KEY = publishableKey;
+      }
+    }
+
     window.__tinyworldAuthReady = new Promise(function (resolve) {
       window.__resolveTinyWorldAuthReady = resolve;
-      setTimeout(function () { resolve(false); }, 2500);
+      setTimeout(function () { resolve(false); }, 5000);
     });
   })();
-  </script>
-  <script id="tinyworld-auth-importmap" type="importmap">
-  {
-    "imports": {
-      "@netlify/identity": "./vendor/netlify/identity.js",
-      "gotrue-js": "./vendor/netlify/gotrue.js"
-    }
-  }
   </script>
   <script type="module" src="vendor/tinyworld-auth.js"></script>
   <!-- i18n: locale data registers onto window.TWI18N_DATA, then the core
@@ -1698,7 +1688,6 @@
   <script defer src="engine/world/39-atmosphere-effects.js"></script>
   <script defer src="engine/world/40-shield-system.js"></script>
   <script defer src="engine/world/41-flight-combat.js"></script>
-  <script defer src="engine/world/42-account-wallet-players.js"></script>
   <script defer src="engine/world/43-drag-drop-import.js"></script>
   <script defer src="engine/world/44-sub-object-edit.js"></script>
   <script defer src="engine/world/45-shader-fx.js"></script>
