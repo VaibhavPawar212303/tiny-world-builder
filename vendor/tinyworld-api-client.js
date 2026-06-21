@@ -60,6 +60,19 @@ class TinyWorldAPI {
     });
   }
 
+  async getProfile() {
+    return this.request('/api/profile', 'GET');
+  }
+
+  async updateProfile(email, username, displayName, avatarUrl) {
+    return this.request('/api/profile', 'PUT', {
+      email,
+      username,
+      displayName,
+      avatarUrl,
+    });
+  }
+
   // World Operations
   async getWorlds() {
     return this.request('/api/worlds', 'GET');
