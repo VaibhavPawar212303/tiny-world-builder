@@ -90,7 +90,7 @@ is the cheapest population path that exists.
 3. **P2a live deck** if P1 lands with time to spare.
 4. P2b/P3 are stretch.
 
-## Decisions (locked by Jason, 18 Jun)
+## Decisions (finalized 18 Jun)
 1. **Bots: LLM chat, on FREE OpenRouter models** (no canned). Cost stays ~zero via free-tier models;
    runner must target OpenRouter free model ids and degrade gracefully on rate-limit/empty response.
 2. **Default at least 10 NPC peers** in the lobby.

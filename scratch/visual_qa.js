@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const ARTIFACTS_DIR = '/Users/jkneen/.gemini/antigravity-cli/brain/37f8fccb-ec13-4eb5-af4a-0fdc2f711243';
+const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR || './artifacts';
 const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const args = [
   '--headless=new',

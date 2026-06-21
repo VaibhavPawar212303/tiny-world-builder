@@ -5,7 +5,7 @@ Repo: `~/Documents/GitHub/tinyworld` (`~/clawd/github/tinyworld` is a symlink to
 HEAD: `06ace15` on `main` = `origin/main`. Open PRs: **0**. Recent merges: PRs #45–#68.
 
 ## Remotes
-- `origin` → jasonkneen/tiny-world-builder (keep)
+- `origin` → VaibhavPawar212303/tiny-world-builder (keep)
 - `fork-limudim972`, `fork-yuxiaoli` → contributor forks (candidate to prune)
 
 ---
@@ -37,7 +37,7 @@ HEAD: `06ace15` on `main` = `origin/main`. Open PRs: **0**. Recent merges: PRs #
 | `improve-object-selection-radial-menu` | 3 files (+55), upstream [gone] | `git cherry` shows patch-equivalent IS in main → safe |
 
 ## D. SAFE TO DELETE — merged into origin/main, content contained
-**Branches (clean, merged):** all 6 `advisor/00*`; `claude/{bold-curie,clever-dijkstra,gifted-fermat,jolly-brahmagupta}` ([gone]); `jasonkneen/neptune`; `feature/cctv-truman`* ; `opencode/feature-social-intros`* ; `dev`, `refactor/split-god-file`, `asset-system-slice`, `fix/code-review-findings` (0 unique); all merged `polly/*` (p0,p1,p2,p6,p7,p8,p9,p10,p10-onboarding,p11,p12b,p13,p15,p19,w1-*,w2-*); `worktree-fix-wave-badge-colors` (#63); merged `worktree-agent-*`.
+**Branches (clean, merged):** all 6 `advisor/00*`; `claude/{bold-curie,clever-dijkstra,gifted-fermat,jolly-brahmagupta}` ([gone]); `feature/cctv-truman`* ; `opencode/feature-social-intros`* ; `dev`, `refactor/split-god-file`, `asset-system-slice`, `fix/code-review-findings` (0 unique); all merged `polly/*` (p0,p1,p2,p6,p7,p8,p9,p10,p10-onboarding,p11,p12b,p13,p15,p19,w1-*,w2-*); `worktree-fix-wave-badge-colors` (#63); merged `worktree-agent-*`.
   *recover dirty worktree edits first (section A).
 
 **Squash-merged (PR merged, individual SHAs differ):** `polly/p15` (#65 — spot-check), `polly/p17` (#66, cherry-confirmed), `polly/p18` (#67, cherry-confirmed).

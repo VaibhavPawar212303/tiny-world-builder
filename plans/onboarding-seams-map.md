@@ -1,6 +1,6 @@
 # First-Time Onboarding — Seams Map (read-only findings)
 
-Investigation of `/Users/jkneen/Documents/GitHub/tinyworld` for planning a first-time
+Investigation of the Tiny World Builder codebase for planning a first-time
 onboarding experience in the multiplayer lobby. All file:line refs verified against
 current source (engine modules are served live via `netlify dev`; dist/ is prod only).
 

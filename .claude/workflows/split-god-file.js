@@ -13,7 +13,7 @@ export const meta = {
 // ----------------------------------------------------------------------------
 // Authoritative constants (verified from the live file before authoring)
 // ----------------------------------------------------------------------------
-const REPO = '/Users/jkneen/Documents/GitHub/tinyworld'
+const REPO = process.cwd() // Repository root
 const SRC = 'tiny-world-builder.html'
 const BRANCH = 'refactor/split-god-file'
 const MOD_DIR = 'engine/world'
