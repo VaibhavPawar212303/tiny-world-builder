@@ -1,20 +1,10 @@
 'use client';
 
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function BuilderPage() {
-  const { userId, isLoaded } = useAuth();
-  const { user } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoaded && !userId) {
-      router.push('/sign-in');
-    }
-  }, [isLoaded, userId, router]);
+  const { user, isLoaded } = useUser();
 
   if (!isLoaded) {
     return (
@@ -68,7 +58,7 @@ export default function BuilderPage() {
             Coming soon... Get ready to build amazing voxel worlds!
           </p>
           <p style={{ fontSize: '12px', color: '#666' }}>
-            User ID: {userId}
+            Ready to create your first world!
           </p>
         </div>
       </main>
