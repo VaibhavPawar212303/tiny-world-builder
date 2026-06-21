@@ -3,6 +3,13 @@
   "out": "./drizzle",
   "dialect": "mysql",
   "dbCredentials": {
-    "uri": "${{ env.DATABASE_URL }}"
+    "host": "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
+    "port": 4000,
+    "user": "sC5aTifmN57gWAj.root",
+    "password": "1HzLD9xADOoat1WI",
+    "database": "world",
+    "ssl": {
+      "rejectUnauthorized": true
+    }
   }
 }
