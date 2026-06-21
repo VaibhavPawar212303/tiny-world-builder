@@ -3,7 +3,7 @@
 import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import { Canvas } from './components/canvas';
-import { BuildingPalette } from './components/building-palette';
+import { Toolbar } from './components/toolbar';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Voxel } from './lib/voxel-grid';
@@ -170,7 +170,7 @@ export default function BuilderPage() {
 
       <main style={{ flex: 1, background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
         <Canvas initialVoxels={initialVoxels} onVoxelUpdate={handleVoxelUpdate} gridSize={gridSize} />
-        <BuildingPalette onPlaceBuilding={handlePlaceBuilding} gridSize={gridSize} />
+        <Toolbar onSelectTool={handlePlaceBuilding} />
       </main>
 
       {/* Share Modal */}
