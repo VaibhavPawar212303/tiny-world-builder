@@ -4,6 +4,17 @@ import { NextResponse } from 'next/server';
 import { getDatabase, schema } from '@/app/lib/drizzle';
 import { eq } from 'drizzle-orm';
 
+type ClerkWebhookEvent = {
+  type: string;
+  data: {
+    id: string;
+    email_addresses?: Array<{ email_address: string }>;
+    first_name?: string;
+    last_name?: string;
+    image_url?: string;
+  };
+};
+
 export async function POST(req: Request) {
   const headerPayload = await headers();
   const svixId = headerPayload.get('svix-id');
@@ -37,7 +48,7 @@ export async function POST(req: Request) {
       'svix-id': svixId,
       'svix-timestamp': svixTimestamp,
       'svix-signature': svixSignature,
-    });
+    }) as ClerkWebhookEvent;
 
     // Handle user.created event
     if (evt.type === 'user.created') {
