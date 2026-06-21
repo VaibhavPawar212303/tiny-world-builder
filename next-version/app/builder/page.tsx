@@ -40,7 +40,7 @@ export default function BuilderPage() {
           <span style={{ fontSize: '14px', color: '#666' }}>
             {user?.firstName || user?.emailAddresses[0]?.emailAddress}
           </span>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
       </header>
 
