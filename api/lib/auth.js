@@ -57,7 +57,21 @@ async function extractUserFromRequest(req) {
 
   const token = authHeader.slice(7);
   console.log('[AUTH] Extracted token, length:', token.length);
-  return await verifyToken(token);
+
+  const user = await verifyToken(token);
+
+  // Validate user has ID
+  if (user && !user.sub) {
+    console.error('[AUTH] Token verified but missing user ID (sub)');
+    console.error('[AUTH] Payload:', JSON.stringify(user));
+    return null;
+  }
+
+  if (user) {
+    console.log('[AUTH] User ID:', user.sub);
+  }
+
+  return user;
 }
 
 function sendError(res, status, message) {

@@ -21,6 +21,14 @@ module.exports = async function handler(req, res) {
     }
 
     const userId = user.sub;
+
+    // Validate user ID
+    if (!userId) {
+      console.error('[PROFILE] User ID is undefined');
+      console.error('[PROFILE] User payload:', JSON.stringify(user));
+      return sendError(res, 400, 'Invalid user ID');
+    }
+
     console.log('[PROFILE] User ID:', userId);
 
     if (req.method === 'GET') {

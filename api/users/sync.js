@@ -25,6 +25,20 @@ module.exports = async function handler(req, res) {
     // Get user ID from token
     const clerkUserId = user.sub;
 
+    // Validate user ID
+    if (!clerkUserId) {
+      console.error('[USERS] User ID is undefined in sync request');
+      console.error('[USERS] User payload:', JSON.stringify(user));
+      return sendError(res, 400, 'Invalid user ID');
+    }
+
+    // Validate email
+    if (!email) {
+      return sendError(res, 400, 'Email is required');
+    }
+
+    console.log('[USERS] Syncing user:', clerkUserId, 'email:', email);
+
     // Upsert user
     const sql = `
       INSERT INTO users (id, email, username, display_name, avatar_url)
