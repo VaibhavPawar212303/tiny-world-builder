@@ -27,7 +27,7 @@ export async function getDatabase() {
         : undefined,
     });
 
-    db = drizzle(pool, { schema });
+    db = drizzle(pool, { schema, mode: 'default' });
   }
 
   return db;
