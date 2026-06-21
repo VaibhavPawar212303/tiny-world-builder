@@ -1,4 +1,5 @@
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs';
+import { SignedIn, SignedOut } from '@clerk/react';
+import { RedirectToSignIn } from '@clerk/nextjs';
 
 export default function BuilderLayout({
   children,
