@@ -1,47 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Public routes that don't require authentication
-const publicRoutes = ['/', '/sign-in', '/sign-up'];
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/webhooks(.*)',
+]);
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Allow public routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.next();
+export default clerkMiddleware((auth, req) => {
+  if (!isPublicRoute(req)) {
+    auth().protect();
   }
-
-  // Check authentication via API proxy
-  try {
-    const authResponse = await fetch(
-      new URL('/api/auth/proxy', request.nextUrl.origin),
-      {
-        headers: {
-          cookie: request.headers.get('cookie') || '',
-        },
-      }
-    );
-
-    if (!authResponse.ok) {
-      return NextResponse.redirect(new URL('/sign-in', request.nextUrl));
-    }
-
-    const auth = await authResponse.json();
-    if (!auth.authenticated) {
-      return NextResponse.redirect(new URL('/sign-in', request.nextUrl));
-    }
-  } catch (error) {
-    // If auth check fails, redirect to sign-in
-    return NextResponse.redirect(new URL('/sign-in', request.nextUrl));
-  }
-
-  return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
-    '/((?!.+\\.[\\w]+$|_next).*)',
-    '/',
-    '/(api|trpc)(.*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)',
   ],
 };

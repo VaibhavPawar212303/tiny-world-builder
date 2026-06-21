@@ -1,9 +1,10 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tiny World Builder - Next.js',
-  description: 'A 3D voxel world builder in your browser',
+  title: 'Tiny World Builder',
+  description: 'Create beautiful 3D voxel worlds in your browser',
 };
 
 export default function RootLayout({

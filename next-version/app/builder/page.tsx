@@ -1,58 +1,81 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
 
 export default function BuilderPage() {
+  const { userId } = useAuth();
   const { user, isLoaded } = useUser();
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    if (isLoaded && user) {
-      // Initialize the world builder when user is authenticated
-      setIsReady(true);
-    }
-  }, [isLoaded, user]);
 
   if (!isLoaded) {
-    return <div style={{ padding: '20px' }}>Loading...</div>;
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div>Loading builder...</div>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <div style={{ padding: '20px' }}>Please sign in to access the builder.</div>;
+  if (!userId) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div>Authentication required</div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
-      <div style={{ padding: '10px', background: '#f0f0f0', borderBottom: '1px solid #ccc' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '18px' }}>Tiny World Builder</h1>
-          <div>
-            <span style={{ marginRight: '10px' }}>Welcome, {user.firstName || user.emailAddresses[0]?.emailAddress}</span>
-          </div>
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <header style={{
+        padding: '16px',
+        background: '#f5f5f5',
+        borderBottom: '1px solid #e0e0e0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+            Tiny World Builder
+          </h1>
         </div>
-      </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '14px', color: '#666' }}>
+            {user?.firstName || user?.emailAddresses[0]?.emailAddress}
+          </span>
+          <UserButton afterSignOutUrl="/" />
+        </div>
+      </header>
 
-      <div style={{
-        width: '100%',
-        height: 'calc(100vh - 50px)',
+      <main style={{
+        flex: 1,
         background: '#1a1a1a',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff'
+        color: '#fff',
       }}>
-        {isReady ? (
-          <div>
-            <p>World Builder Coming Soon...</p>
-            <p style={{ fontSize: '12px', color: '#999' }}>
-              User ID: {user.id}
-            </p>
-          </div>
-        ) : (
-          <p>Initializing...</p>
-        )}
-      </div>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '12px' }}>World Builder</h2>
+          <p style={{ color: '#999', marginBottom: '20px' }}>
+            Coming soon... Get ready to build amazing voxel worlds!
+          </p>
+          <p style={{ fontSize: '12px', color: '#666' }}>
+            User ID: {userId}
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
