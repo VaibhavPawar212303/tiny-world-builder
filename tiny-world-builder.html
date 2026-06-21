@@ -10,15 +10,29 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300..700&family=Space+Grotesk:wght@300..700&display=swap" />
   <link rel="stylesheet" href="styles/tiny-world.css">
   <link rel="stylesheet" href="styles/countdown.css">
-<!-- Clerk Public Key Injection Point (dev server injects here) -->
+<!-- Clerk Public Key Injection Point -->
 <script id="clerk-key-injection">
-  // This is replaced by dev-server.js with: window.__CLERK_PUBLISHABLE_KEY = "pk_test_..."
-  // For production, use environment variables or set this manually
-  if (typeof window.__CLERK_PUBLISHABLE_KEY === 'undefined') {
-    console.log('[Head] Clerk key not yet injected by server');
-  } else {
-    console.log('[Head] Clerk key pre-loaded: ' + window.__CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
-  }
+  (function() {
+    console.log('[Clerk Config] Loading Clerk configuration...');
+
+    // Try to load from clerk-config.json (created by publish.sh for Vercel)
+    fetch('/clerk-config.json')
+      .then(r => r.json())
+      .then(config => {
+        if (config.CLERK_PUBLISHABLE_KEY) {
+          window.__CLERK_PUBLISHABLE_KEY = config.CLERK_PUBLISHABLE_KEY;
+          console.log('[Clerk Config] ✓ Loaded from clerk-config.json: ' + config.CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
+        } else {
+          console.warn('[Clerk Config] ✗ No key in clerk-config.json');
+        }
+      })
+      .catch(err => {
+        console.log('[Clerk Config] clerk-config.json not found (local dev mode), key will be injected by dev-server');
+      });
+  })();
+
+  // This is also replaced by dev-server.js with: window.__CLERK_PUBLISHABLE_KEY = "pk_test_..."
+  // And by publish.sh for Vercel deployments
 </script>
 
 <script src="engine/world/00-custom-confirm.js"></script>
@@ -1612,71 +1626,45 @@
   (function tinyworldAuthBootstrap() {
     console.log('[Clerk Bootstrap] Starting Clerk key initialization...');
 
-    // Set Clerk publishable key from multiple sources (in priority order)
-    if (!window.__CLERK_PUBLISHABLE_KEY) {
-      console.log('[Clerk Bootstrap] Searching for Clerk publishable key...');
+    // Wait for config to load (from clerk-config.json or dev-server injection)
+    let waitAttempts = 0;
+    const maxWaitAttempts = 50; // 5 seconds at 100ms intervals
 
-      const publishableKey = (function () {
-        try {
-          // 1. Check URL parameter
-          console.log('[Clerk Bootstrap] 1. Checking URL parameters...');
-          const url = new URL(window.location.href);
-          const urlKey = url.searchParams.get('clerk_key');
-          if (urlKey) {
-            console.log('[Clerk Bootstrap] ✓ Found key in URL parameter');
-            return urlKey;
-          }
-          console.log('[Clerk Bootstrap] ✗ No key in URL parameter');
+    function checkAndInitClerk() {
+      waitAttempts++;
 
-          // 2. Check localStorage
-          console.log('[Clerk Bootstrap] 2. Checking localStorage...');
-          const storedKey = localStorage.getItem('clerk_publishable_key');
-          if (storedKey) {
-            console.log('[Clerk Bootstrap] ✓ Found key in localStorage:', storedKey.substring(0, 20) + '...');
-            return storedKey;
-          }
-          console.log('[Clerk Bootstrap] ✗ No key in localStorage');
-
-          // 3. Check if injected by build system (from .env.local or Vercel env)
-          console.log('[Clerk Bootstrap] 3. Checking window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY...');
-          if (window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-            console.log('[Clerk Bootstrap] ✓ Found key in window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:',
-              window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
-            return window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-          }
-          console.log('[Clerk Bootstrap] ✗ No key in window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
-
-          // 4. Try to read from window if set by external script
-          console.log('[Clerk Bootstrap] 4. Checking window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY...');
-          if (window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-            console.log('[Clerk Bootstrap] ✓ Found key in window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:',
-              window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
-            return window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-          }
-          console.log('[Clerk Bootstrap] ✗ No key in window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
-
-          return '';
-        } catch (err) {
-          console.error('[Clerk Bootstrap] Error searching for key:', err);
-          return '';
-        }
-      })();
-
-      if (publishableKey) {
-        window.__CLERK_PUBLISHABLE_KEY = publishableKey;
-        console.log('[Clerk Bootstrap] ✓ Key loaded successfully: ' + publishableKey.substring(0, 20) + '...');
-      } else {
-        console.warn('[Clerk Bootstrap] ✗ No Clerk publishable key found in any source');
-        console.warn('[Clerk Bootstrap] Expected sources: URL parameter, localStorage, window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
+      if (window.__CLERK_PUBLISHABLE_KEY) {
+        console.log('[Clerk Bootstrap] ✓ Key available, proceeding with initialization');
+        completeBootstrap();
+        return;
       }
-    } else {
-      console.log('[Clerk Bootstrap] ✓ Clerk key already set: ' + window.__CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
+
+      if (waitAttempts >= maxWaitAttempts) {
+        console.warn('[Clerk Bootstrap] Timeout waiting for Clerk key (50 attempts), proceeding anyway');
+        completeBootstrap();
+        return;
+      }
+
+      // Wait and try again
+      setTimeout(checkAndInitClerk, 100);
     }
 
-    window.__tinyworldAuthReady = new Promise(function (resolve) {
-      window.__resolveTinyWorldAuthReady = resolve;
-      setTimeout(function () { resolve(false); }, 5000);
-    });
+    function completeBootstrap() {
+      // Key is already set, just create auth promise
+      if (window.__CLERK_PUBLISHABLE_KEY) {
+        console.log('[Clerk Bootstrap] ✓ Key available: ' + window.__CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
+      } else {
+        console.warn('[Clerk Bootstrap] ✗ Key still not available after waiting');
+      }
+
+      window.__tinyworldAuthReady = new Promise(function (resolve) {
+        window.__resolveTinyWorldAuthReady = resolve;
+        setTimeout(function () { resolve(false); }, 5000);
+      });
+    }
+
+    // Start checking for the key
+    checkAndInitClerk();
   })();
   </script>
   <script type="module" src="vendor/tinyworld-auth.js"></script>

@@ -60,14 +60,21 @@ cp index.html "$DIST/index.html"
 cp tiny-world-builder.html "$DIST/tiny-world-builder.html"
 cp roadmap.html "$DIST/roadmap.html"
 
-# Inject Clerk environment variables into HTML files
+# Create Clerk configuration file from environment variables
+# This allows the static site to access environment variables via JSON
+printf '✓ Creating clerk-config.json\n'
+CLERK_CONFIG="{\"CLERK_PUBLISHABLE_KEY\": \"${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}\"}"
+echo "$CLERK_CONFIG" > "$DIST/clerk-config.json"
+printf '  ✓ Created: dist/clerk-config.json\n'
+
+# Also inject directly into HTML as fallback
 if [[ -n "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}" ]]; then
-  printf '✓ Injecting Clerk key: %s\n' "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:0:20}..."
-  for html_file in "$DIST"/index.html "$DIST"/tiny-world-builder.html "$DIST"/community.html "$DIST"/admin-users.html "$DIST"/sign-in.html "$DIST"/sign-up.html; do
+  printf '✓ Injecting Clerk key into HTML: %s\n' "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:0:20}..."
+  # Inject into the clerk-key-injection script
+  for html_file in "$DIST"/tiny-world-builder.html "$DIST"/index.html; do
     if [[ -f "$html_file" ]]; then
-      # Use a temp file for safer sed replacement
-      sed "s|window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_[^']*'|window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = '$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'|g" "$html_file" > "$html_file.tmp"
-      mv "$html_file.tmp" "$html_file"
+      # Replace the clerk-key-injection placeholder
+      sed -i "s|// This is replaced by dev-server.js|window.__CLERK_PUBLISHABLE_KEY = '${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}'; // Injected by publish.sh|g" "$html_file"
       printf '  ✓ Injected into %s\n' "$(basename "$html_file")"
     fi
   done
