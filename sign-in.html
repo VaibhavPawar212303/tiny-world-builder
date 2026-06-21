@@ -150,13 +150,15 @@
         // Demo/test mode: Create a test account and session
         // In production, this would connect to your backend API
         setTimeout(() => {
+          const userId = 'user_' + Date.now();
           const testUser = {
-            id: 'user_' + Date.now(),
+            id: userId,
             email: 'demo@tinyworld.local',
             created_at: new Date().toISOString()
           };
 
-          const testToken = 'sk_test_' + Math.random().toString(36).substring(2, 15);
+          // Use the correct test token format that the backend expects
+          const testToken = 'test-token-' + userId;
 
           // Store in localStorage for persistence
           localStorage.setItem('tinyworld:user', JSON.stringify(testUser));
