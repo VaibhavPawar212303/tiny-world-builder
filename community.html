@@ -18,8 +18,20 @@
     if (!window.__CLERK_PUBLISHABLE_KEY) {
       const publishableKey = (function () {
         try {
+          // 1. Check URL parameter
           const url = new URL(window.location.href);
-          return url.searchParams.get('clerk_key') || localStorage.getItem('clerk_publishable_key') || '';
+          const urlKey = url.searchParams.get('clerk_key');
+          if (urlKey) return urlKey;
+
+          // 2. Check localStorage
+          const storedKey = localStorage.getItem('clerk_publishable_key');
+          if (storedKey) return storedKey;
+
+          // 3. Check window variables (Vercel env)
+          if (window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+          if (window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+          return '';
         } catch (_) {
           return '';
         }

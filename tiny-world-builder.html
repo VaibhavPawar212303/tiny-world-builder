@@ -1612,10 +1612,14 @@
           const storedKey = localStorage.getItem('clerk_publishable_key');
           if (storedKey) return storedKey;
 
-          // 3. Check if injected by build system (from .env.local)
-          // This would be set by a build process or development server
+          // 3. Check if injected by build system (from .env.local or Vercel env)
           if (window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
             return window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+          }
+
+          // 4. Try to read from window if set by external script
+          if (window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+            return window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
           }
 
           return '';
