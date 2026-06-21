@@ -14,6 +14,10 @@ async function getPool() {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    ssl: 'Amazon RDS',
+    authPlugins: {
+      mysql_native_password: () => () => process.env.DB_PASSWORD,
+    },
   });
 
   return pool;
