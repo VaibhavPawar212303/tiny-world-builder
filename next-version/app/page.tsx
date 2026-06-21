@@ -1,8 +1,20 @@
 'use client';
 
 import { UserButton, SignInButton, SignUpButton, Show } from '@clerk/nextjs';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 
 export default function Home() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push('/worlds');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   return (
     <main style={{
       minHeight: '100vh',
@@ -74,52 +86,6 @@ export default function Home() {
               </button>
             </SignUpButton>
           </div>
-        </div>
-      </Show>
-
-      <Show when="signed-in">
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-        }}>
-          <UserButton />
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: '40px 20px',
-          maxWidth: '600px',
-          color: 'white',
-        }}>
-          <h1 style={{
-            fontSize: '56px',
-            marginBottom: '16px',
-            fontWeight: '700',
-          }}>
-            Welcome Back!
-          </h1>
-          <p style={{
-            fontSize: '20px',
-            marginBottom: '40px',
-            color: 'rgba(255, 255, 255, 0.9)',
-          }}>
-            Start creating your own unique voxel worlds
-          </p>
-
-          <a href="/builder" style={{
-            display: 'inline-block',
-            padding: '16px 40px',
-            background: 'white',
-            color: '#667eea',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontSize: '18px',
-            fontWeight: '600',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          }}>
-            Open Builder
-          </a>
         </div>
       </Show>
     </main>

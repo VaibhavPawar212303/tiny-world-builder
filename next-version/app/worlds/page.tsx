@@ -1,0 +1,246 @@
+'use client';
+
+import { useUser } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
+
+interface World {
+  id: string;
+  title: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function WorldsPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [worlds, setWorlds] = useState<World[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const loadWorlds = async () => {
+      try {
+        const res = await fetch('/api/worlds');
+        if (res.ok) {
+          const data = await res.json();
+          setWorlds(data);
+        }
+      } catch (error) {
+        console.error('Failed to load worlds:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWorlds();
+  }, [isLoaded]);
+
+  const handleCreateWorld = async () => {
+    setCreating(true);
+    try {
+      const newWorld = {
+        title: 'New World',
+        description: 'A fresh world waiting to be built',
+        state: {},
+      };
+
+      const res = await fetch('/api/worlds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWorld),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/builder?id=${data.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create world:', error);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteWorld = async (worldId: string) => {
+    if (!confirm('Are you sure you want to delete this world?')) return;
+
+    try {
+      await fetch(`/api/worlds/${worldId}`, { method: 'DELETE' });
+      setWorlds(worlds.filter((w) => w.id !== worldId));
+    } catch (error) {
+      console.error('Failed to delete world:', error);
+    }
+  };
+
+  if (!isLoaded) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f5f5f5',
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <header style={{
+        padding: '20px',
+        background: '#fff',
+        borderBottom: '1px solid #e0e0e0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <div>
+          <h1 style={{ margin: '0 0 4px 0', fontSize: '28px', fontWeight: '700' }}>
+            My Worlds
+          </h1>
+          <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+            Create and manage your voxel worlds
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: '500' }}>
+              {user?.firstName || user?.emailAddresses[0]?.emailAddress}
+            </p>
+          </div>
+          <UserButton />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main style={{ flex: 1, padding: '40px 20px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Create World Button */}
+          <button
+            onClick={handleCreateWorld}
+            disabled={creating}
+            style={{
+              padding: '12px 24px',
+              background: '#4ecdc4',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: creating ? 'not-allowed' : 'pointer',
+              opacity: creating ? 0.6 : 1,
+              marginBottom: '30px',
+            }}
+          >
+            {creating ? 'Creating...' : '+ New World'}
+          </button>
+
+          {/* Worlds Grid */}
+          {loading ? (
+            <div style={{ textAlign: 'center', color: '#666' }}>
+              Loading worlds...
+            </div>
+          ) : worlds.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              color: '#999',
+            }}>
+              <p style={{ fontSize: '18px', marginBottom: '12px' }}>
+                No worlds yet. Create your first one!
+              </p>
+              <p style={{ fontSize: '14px' }}>
+                Click the "New World" button to get started.
+              </p>
+            </div>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+              gap: '20px',
+            }}>
+              {worlds.map((world) => (
+                <div
+                  key={world.id}
+                  style={{
+                    background: '#fff',
+                    borderRadius: '8px',
+                    padding: '20px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                    {world.title}
+                  </h3>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#666',
+                    flex: 1,
+                  }}>
+                    {world.description || 'No description'}
+                  </p>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '12px',
+                    color: '#999',
+                  }}>
+                    Modified: {new Date(world.updatedAt).toLocaleDateString()}
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                  }}>
+                    <button
+                      onClick={() => router.push(`/builder?id=${world.id}`)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: '#4ecdc4',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteWorld(world.id)}
+                      style={{
+                        padding: '8px 12px',
+                        background: '#ff6b6b',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
