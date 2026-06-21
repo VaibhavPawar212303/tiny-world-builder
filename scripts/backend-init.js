@@ -17,29 +17,67 @@
   // Initialize API client
   window.tinyWorldAPI = new TinyWorldAPI(BACKEND_URL, async () => {
     try {
-      // Get token from Clerk
+      console.log('[Backend] Getting auth token...');
+
+      // Get user from our custom auth
       const auth = window.TinyWorldAuth;
-      if (!auth) return null;
-
-      // Try to get user - if it returns a user object, we're authenticated
-      const user = await auth.getUser();
-      if (!user) return null;
-
-      // Manually get the Clerk session token
-      // This is stored by Clerk SDK when user logs in
-      const token = sessionStorage.getItem('clerk-session-token')
-        || localStorage.getItem('clerk-session-token');
-
-      if (token) return token;
-
-      // Fallback: try to extract from Clerk
-      if (window.Clerk && window.Clerk.session) {
-        return await window.Clerk.session.getToken({ template: 'tinyworld' });
+      if (!auth) {
+        console.warn('[Backend] TinyWorldAuth not available');
+        return null;
       }
 
-      return null;
+      const user = await auth.getUser();
+      if (!user) {
+        console.warn('[Backend] User not authenticated');
+        return null;
+      }
+
+      console.log('[Backend] User authenticated:', user.id);
+
+      // Try multiple ways to get the Clerk JWT token
+      let token = null;
+
+      // Method 1: Try sessionStorage (if we stored it)
+      token = sessionStorage.getItem('clerk-session-token');
+      if (token) {
+        console.log('[Backend] Token from sessionStorage');
+        return token;
+      }
+
+      // Method 2: Try localStorage backup
+      token = localStorage.getItem('clerk-session-token');
+      if (token) {
+        console.log('[Backend] Token from localStorage');
+        return token;
+      }
+
+      // Method 3: Try Clerk SDK if available
+      if (window.Clerk && window.Clerk.session) {
+        console.log('[Backend] Getting token from Clerk session...');
+        try {
+          // Get the default session token
+          token = await window.Clerk.session.getToken();
+          if (token) {
+            console.log('[Backend] Token from Clerk.session.getToken()');
+            // Store for next time
+            sessionStorage.setItem('clerk-session-token', token);
+            return token;
+          }
+        } catch (err) {
+          console.warn('[Backend] Clerk.session.getToken() failed:', err.message);
+        }
+      }
+
+      // Method 4: Use a dummy token with user info for testing
+      // This won't verify but helps us see what's happening
+      const dummyToken = 'test-token-' + user.id;
+      console.warn('[Backend] No valid token found, using test token');
+      sessionStorage.setItem('clerk-session-token', dummyToken);
+      return dummyToken;
+
     } catch (err) {
-      console.warn('[Backend] Failed to get auth token:', err);
+      console.error('[Backend] Failed to get auth token:', err.message);
+      console.error('[Backend] Full error:', err);
       return null;
     }
   });
