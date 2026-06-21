@@ -4,10 +4,8 @@
 (async function initBackendAPI() {
   'use strict';
 
-  // Configure backend URL (change for production)
-  const BACKEND_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:3001'
-    : window.location.origin;
+  // Configure backend URL - use same origin (Vercel functions)
+  const BACKEND_URL = window.location.origin;
 
   // Wait for Clerk auth to be ready
   if (window.__tinyworldAuthReady) {
