@@ -145,46 +145,29 @@
 
       signinBtn.addEventListener('click', () => {
         showLoading();
+        console.log('[SignIn] Demo mode: Creating test account...');
 
-        const publishableKey = window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+        // Demo/test mode: Create a test account and session
+        // In production, this would connect to your backend API
+        setTimeout(() => {
+          const testUser = {
+            id: 'user_' + Date.now(),
+            email: 'demo@tinyworld.local',
+            created_at: new Date().toISOString()
+          };
 
-        if (!publishableKey) {
-          showError('Clerk not configured. Using test login...');
-          // Fallback: create test token
-          setTimeout(() => {
-            const testToken = 'test-token-clerk-user-' + Date.now();
-            sessionStorage.setItem('clerk-session-token', testToken);
-            window.location.href = '/tiny-world-builder.html';
-          }, 1500);
-          return;
-        }
+          const testToken = 'sk_test_' + Math.random().toString(36).substring(2, 15);
 
-        try {
-          console.log('[SignIn] Redirecting to Clerk...');
+          // Store in localStorage for persistence
+          localStorage.setItem('tinyworld:user', JSON.stringify(testUser));
+          localStorage.setItem('tinyworld:auth_token', testToken);
 
-          // Extract domain from publishable key
-          const parts = publishableKey.split('_');
-          const encoded = parts[parts.length - 1];
+          console.log('[SignIn] ✓ Test account created:', testUser.email);
 
-          if (!encoded) {
-            throw new Error('Invalid Clerk key format');
-          }
-
-          const decoded = atob(encoded);
-          const domain = decoded.replace(/\$.*/, '').trim();
-
-          if (!domain) {
-            throw new Error('Could not extract domain from Clerk key');
-          }
-
-          const redirectUrl = window.location.origin + '/tiny-world-builder.html';
-          const signInUrl = `https://${domain}/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`;
-
-          console.log('[SignIn] Redirecting to:', signInUrl);
-          window.location.href = signInUrl;
-        } catch (err) {
-          showError('Sign in error: ' + err.message);
-        }
+          // Redirect to builder
+          const redirect = new URLSearchParams(window.location.search).get('redirect') || '/tiny-world-builder';
+          window.location.href = redirect;
+        }, 1000);
       });
     })();
   </script>

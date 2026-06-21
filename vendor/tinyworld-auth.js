@@ -52,35 +52,12 @@ function showClerkError(title, message) {
 
 function redirectToClerkSignIn(publishableKey) {
   try {
-    console.log('[Clerk] Starting redirect with key:', publishableKey);
+    console.log('[Clerk] Starting sign-in redirect...');
 
-    // Extract domain from publishable key
-    // pk_test_Y2hhcm1lZC1yZWRiaXJkLTIzLmNsZXJrLmFjY291bnRzLmRldiQ
-    const parts = publishableKey.split('_');
-    const encoded = parts[parts.length - 1];
+    const signInUrl = window.location.pathname.includes('/tiny-world-builder')
+      ? '/sign-in.html?redirect=/tiny-world-builder'
+      : '/sign-in.html';
 
-    if (!encoded) {
-      throw new Error('Invalid publishable key format (no encoded part)');
-    }
-
-    let decoded;
-    try {
-      decoded = atob(encoded);
-    } catch (e) {
-      throw new Error('Failed to decode publishable key: ' + e.message);
-    }
-
-    const domain = decoded.replace(/\$.*/, '').trim();
-
-    if (!domain) {
-      throw new Error('Could not extract domain from key (decoded: ' + decoded + ')');
-    }
-
-    const redirectUrl = window.location.href;
-    const signInUrl = `https://${domain}/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`;
-
-    console.log('[Clerk] Extracted domain:', domain);
-    console.log('[Clerk] Current URL:', redirectUrl);
     console.log('[Clerk] Sign-in URL:', signInUrl);
 
     // Show redirect modal
@@ -88,11 +65,11 @@ function redirectToClerkSignIn(publishableKey) {
     const signInRoot = document.getElementById('clerk-sign-in-root');
 
     if (authContainer && signInRoot) {
-      console.log('[Clerk] Auth container found, showing modal');
+      console.log('[Clerk] Auth container found, showing redirect');
       authContainer.style.display = 'flex';
       signInRoot.innerHTML = `
         <div style="color:#666;font-size:14px;text-align:center">
-          <p>Redirecting to Clerk...</p>
+          <p>Redirecting to sign in...</p>
           <p style="font-size:12px;margin-top:12px;color:#999">
             <a href="${signInUrl}" style="color:#0066cc;text-decoration:none">Click here if not redirected</a>
           </p>
@@ -103,12 +80,12 @@ function redirectToClerkSignIn(publishableKey) {
     }
 
     // Redirect immediately
-    console.log('[Clerk] Setting window.location.href to:', signInUrl);
+    console.log('[Clerk] Navigating to:', signInUrl);
     window.location.href = signInUrl;
 
   } catch (err) {
     console.error('[Clerk] Redirect failed:', err);
-    showClerkError('Configuration Error', 'Could not redirect to sign-in: ' + err.message);
+    showClerkError('Error', 'Could not redirect to sign-in: ' + err.message);
   }
 }
 
