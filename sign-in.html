@@ -160,9 +160,10 @@
           // Use the correct test token format that the backend expects
           const testToken = 'test-token-' + userId;
 
-          // Store in localStorage for persistence
+          // Store in localStorage and sessionStorage with correct keys
           localStorage.setItem('tinyworld:user', JSON.stringify(testUser));
-          localStorage.setItem('tinyworld:auth_token', testToken);
+          localStorage.setItem('clerk-session-token', testToken);
+          sessionStorage.setItem('clerk-session-token', testToken);
 
           console.log('[SignIn] ✓ Test account created:', testUser.email);
 
