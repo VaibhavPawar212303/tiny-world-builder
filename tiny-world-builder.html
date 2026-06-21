@@ -1659,7 +1659,11 @@
 
       window.__tinyworldAuthReady = new Promise(function (resolve) {
         window.__resolveTinyWorldAuthReady = resolve;
-        setTimeout(function () { resolve(false); }, 5000);
+        console.log('[Clerk Bootstrap] ✓ __resolveTinyWorldAuthReady function set, waiting for initClerk()...');
+        setTimeout(function () {
+          console.warn('[Clerk Bootstrap] Auth timeout after 5s, resolving with false');
+          resolve(false);
+        }, 5000);
       });
     }
 

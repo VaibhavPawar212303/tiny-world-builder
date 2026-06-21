@@ -381,11 +381,17 @@ window.TinyWorldAuth = {
 };
 
 // Auto-initialize Clerk on script load
+console.log('[Auth Module] tinyworld-auth.js loaded, checking for __resolveTinyWorldAuthReady...');
+console.log('[Auth Module] typeof __resolveTinyWorldAuthReady:', typeof window.__resolveTinyWorldAuthReady);
 if (typeof window.__resolveTinyWorldAuthReady === 'function') {
+  console.log('[Auth Module] ✓ Found __resolveTinyWorldAuthReady, calling initClerk()...');
   initClerk().then(() => {
+    console.log('[Auth Module] ✓ initClerk completed successfully');
     window.__resolveTinyWorldAuthReady(true);
   }).catch((err) => {
     console.error('Clerk initialization failed:', err);
     window.__resolveTinyWorldAuthReady(false);
   });
+} else {
+  console.warn('[Auth Module] ✗ __resolveTinyWorldAuthReady not found!');
 }
