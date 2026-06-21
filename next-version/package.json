@@ -13,7 +13,7 @@
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@clerk/nextjs": "^5.0.0",
+    "@clerk/nextjs": "latest",
     "three": "^0.128.0",
     "jose": "^5.1.0",
     "mysql2": "^3.6.5",

@@ -1,16 +1,42 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-]);
+// Public routes that don't require authentication
+const publicRoutes = ['/', '/sign-in', '/sign-up'];
 
-export default clerkMiddleware((auth, req) => {
-  if (!isPublicRoute(req)) {
-    auth().protect();
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow public routes
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
   }
-});
+
+  // Check authentication via API proxy
+  try {
+    const authResponse = await fetch(
+      new URL('/api/auth/proxy', request.nextUrl.origin),
+      {
+        headers: {
+          cookie: request.headers.get('cookie') || '',
+        },
+      }
+    );
+
+    if (!authResponse.ok) {
+      return NextResponse.redirect(new URL('/sign-in', request.nextUrl));
+    }
+
+    const auth = await authResponse.json();
+    if (!auth.authenticated) {
+      return NextResponse.redirect(new URL('/sign-in', request.nextUrl));
+    }
+  } catch (error) {
+    // If auth check fails, redirect to sign-in
+    return NextResponse.redirect(new URL('/sign-in', request.nextUrl));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
@@ -19,5 +45,3 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 };
-
-export const runtime = 'nodejs';
