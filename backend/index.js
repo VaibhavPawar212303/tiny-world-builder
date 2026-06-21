@@ -343,17 +343,47 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found', path: req.path });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('[Error]', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Start server
 async function start() {
   try {
-    await initDatabase();
-    console.log('✓ Database connected');
+    // Initialize database if credentials are provided
+    if (process.env.DB_HOST && process.env.DB_USER) {
+      try {
+        await initDatabase();
+        console.log('✓ Database connected');
+      } catch (dbErr) {
+        console.warn('⚠ Database connection failed:', dbErr.message);
+        console.warn('  Running in offline mode - database features disabled');
+      }
+    } else {
+      console.warn('⚠ Database credentials not found in environment');
+      console.warn('  To enable database features, set:');
+      console.warn('  - DB_HOST, DB_USER, DB_PASSWORD, DB_NAME');
+      console.warn('  - Or DATABASE_URL');
+    }
 
     app.listen(PORT, () => {
       console.log(`✓ TinyWorld Backend running on port ${PORT}`);
+      console.log(`  Health check: http://localhost:${PORT}/api/health`);
+      console.log(`  Frontend: http://localhost:3000`);
     });
   } catch (err) {
-    console.error('Failed to start server:', err);
+    console.error('✗ Failed to start server:', err.message);
     process.exit(1);
   }
 }
