@@ -22,6 +22,7 @@ export default function BuilderPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [currentVoxels, setCurrentVoxels] = useState<Voxel[]>([]);
+  const [selectedTool, setSelectedTool] = useState<string>('select');
 
   useEffect(() => {
     if (!worldId || !isLoaded) return;
@@ -65,10 +66,9 @@ export default function BuilderPage() {
     }
   };
 
-  const handlePlaceBuilding = (buildingVoxels: Voxel[]) => {
-    // Merge building voxels with current voxels and update
-    const mergedVoxels = [...currentVoxels, ...buildingVoxels];
-    handleVoxelUpdate(mergedVoxels);
+  const handleSelectTool = (tool: any) => {
+    // Just select the tool - actual placement happens via canvas interaction
+    setSelectedTool(tool.id);
   };
 
   const handleShare = async () => {
@@ -170,7 +170,7 @@ export default function BuilderPage() {
 
       <main style={{ flex: 1, background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
         <Canvas initialVoxels={initialVoxels} onVoxelUpdate={handleVoxelUpdate} gridSize={gridSize} />
-        <Toolbar onSelectTool={handlePlaceBuilding} />
+        <Toolbar onSelectTool={handleSelectTool} />
       </main>
 
       {/* Share Modal */}
