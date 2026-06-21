@@ -135,7 +135,17 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       try {
-        twSafeSetItem(STORAGE_KEY, JSON.stringify(buildWorldStateObject()), 'World');
+        const stateObj = buildWorldStateObject();
+        const stateStr = JSON.stringify(stateObj);
+        twSafeSetItem(STORAGE_KEY, stateStr, 'World');
+
+        // Sync to backend if available
+        if (window.tinyWorldAPI && window.tinyWorldBackendReady) {
+          const worldId = window.__currentWorldId || 'default';
+          const title = (window.__currentWorldTitle || 'Untitled World').slice(0, 255);
+          window.tinyWorldAPI.saveWorld(worldId, title, '', stateObj)
+            .catch(err => console.warn('[Backend] Save failed:', err));
+        }
       } catch (_) {}
       // 800ms (was 200ms): a long paint stroke now serializes the world once
       // or twice instead of several times a second. Matches the world-menu
