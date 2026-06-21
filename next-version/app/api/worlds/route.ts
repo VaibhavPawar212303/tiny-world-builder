@@ -19,7 +19,7 @@ export async function GET() {
     const worlds = await db
       .select()
       .from(schema.worlds)
-      .where(eq(schema.worlds.clerkId, userId))
+      .where(eq(schema.worlds.userId, userId))
       .orderBy(desc(schema.worlds.updatedAt));
 
     return NextResponse.json(worlds || []);
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     const db = await getDatabase();
     await db.insert(schema.worlds).values({
       id: worldId,
-      clerkId: userId,
+      userId,
       title,
       description,
       state: state || {},

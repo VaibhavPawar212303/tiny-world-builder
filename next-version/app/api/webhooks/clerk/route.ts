@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       const existing = await db
         .select()
         .from(schema.users)
-        .where(eq(schema.users.clerkId, id))
+        .where(eq(schema.users.id, id))
         .limit(1);
 
       if (existing && existing.length > 0) {
@@ -85,18 +85,16 @@ export async function POST(req: Request) {
           .update(schema.users)
           .set({
             email: userEmail,
-            firstName: first_name || undefined,
-            lastName: last_name || undefined,
+            displayName: first_name && last_name ? `${first_name} ${last_name}` : first_name || undefined,
             avatarUrl: image_url || undefined,
           })
-          .where(eq(schema.users.clerkId, id));
+          .where(eq(schema.users.id, id));
       } else {
         // Create new user
         await db.insert(schema.users).values({
-          clerkId: id,
+          id,
           email: userEmail,
-          firstName: first_name || undefined,
-          lastName: last_name || undefined,
+          displayName: first_name && last_name ? `${first_name} ${last_name}` : first_name || undefined,
           avatarUrl: image_url || undefined,
         });
       }
@@ -117,11 +115,10 @@ export async function POST(req: Request) {
           .update(schema.users)
           .set({
             email: userEmail,
-            firstName: first_name || undefined,
-            lastName: last_name || undefined,
+            displayName: first_name && last_name ? `${first_name} ${last_name}` : first_name || undefined,
             avatarUrl: image_url || undefined,
           })
-          .where(eq(schema.users.clerkId, id));
+          .where(eq(schema.users.id, id));
 
         console.log(`User ${id} updated in database`);
       }

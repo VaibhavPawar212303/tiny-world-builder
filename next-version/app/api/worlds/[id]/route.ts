@@ -22,7 +22,7 @@ export async function GET(
     const world = await db
       .select()
       .from(schema.worlds)
-      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.clerkId, userId)))
+      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.userId, userId)))
       .limit(1);
 
     if (!world || world.length === 0) {
@@ -68,7 +68,7 @@ export async function PUT(
         description,
         state,
       })
-      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.clerkId, userId)));
+      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.userId, userId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -98,7 +98,7 @@ export async function DELETE(
     const db = await getDatabase();
     await db
       .delete(schema.worlds)
-      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.clerkId, userId)));
+      .where(and(eq(schema.worlds.id, id), eq(schema.worlds.userId, userId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {

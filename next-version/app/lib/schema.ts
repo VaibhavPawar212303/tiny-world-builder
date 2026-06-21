@@ -8,7 +8,6 @@ import {
   timestamp,
   uniqueIndex,
   index,
-  primaryKey,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -16,17 +15,17 @@ import { sql } from 'drizzle-orm';
 export const users = mysqlTable(
   'users',
   {
-    id: varchar('id', { length: 255 }).primaryKey().default(sql`(UUID())`),
-    clerkId: varchar('clerk_id', { length: 255 }).notNull().unique(),
+    id: varchar('id', { length: 255 }).primaryKey(),
     email: varchar('email', { length: 255 }).notNull().unique(),
-    firstName: varchar('first_name', { length: 255 }),
-    lastName: varchar('last_name', { length: 255 }),
-    avatarUrl: varchar('avatar_url', { length: 255 }),
+    username: varchar('username', { length: 255 }),
+    displayName: varchar('display_name', { length: 255 }),
+    avatarUrl: text('avatar_url'),
     createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
     updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   },
   (table) => ({
-    clerkIdIdx: index('idx_clerk_id').on(table.clerkId),
+    emailIdx: index('idx_email').on(table.email),
+    createdIdx: index('idx_created').on(table.createdAt),
   })
 );
 
@@ -34,19 +33,24 @@ export const users = mysqlTable(
 export const worlds = mysqlTable(
   'worlds',
   {
-    id: varchar('id', { length: 255 }).primaryKey(),
-    clerkId: varchar('clerk_id', { length: 255 }).notNull(),
+    id: varchar('id', { length: 36 }).primaryKey(),
+    userId: varchar('user_id', { length: 255 }).notNull(),
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
-    state: json('state'),
+    state: json('state').notNull(),
     version: int('version').default(1),
     isPublic: boolean('is_public').default(false),
+    shareId: varchar('share_id', { length: 36 }).unique(),
     createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
     updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
-    clerkIdIdx: index('idx_worlds_clerk_id').on(table.clerkId),
-    createdAtIdx: index('idx_worlds_created_at').on(table.createdAt),
+    userIdx: index('idx_user').on(table.userId),
+    createdIdx: index('idx_created').on(table.createdAt),
+    shareIdx: index('idx_share').on(table.shareId),
+    publicIdx: index('idx_public').on(table.isPublic),
+    userCreatedIdx: index('idx_worlds_user_created').on(table.userId, table.createdAt),
   })
 );
 
@@ -54,20 +58,22 @@ export const worlds = mysqlTable(
 export const builds = mysqlTable(
   'builds',
   {
-    id: varchar('id', { length: 255 }).primaryKey(),
-    worldId: varchar('world_id', { length: 255 }).notNull(),
-    clerkId: varchar('clerk_id', { length: 255 }).notNull(),
+    id: varchar('id', { length: 36 }).primaryKey(),
+    worldId: varchar('world_id', { length: 36 }).notNull(),
+    userId: varchar('user_id', { length: 255 }).notNull(),
     title: varchar('title', { length: 255 }),
     description: text('description'),
-    state: json('state'),
+    state: json('state').notNull(),
     changeSummary: text('change_summary'),
-    version: int('version'),
-    parentBuildId: varchar('parent_build_id', { length: 255 }),
+    version: int('version').notNull(),
+    parentBuildId: varchar('parent_build_id', { length: 36 }),
     createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    worldIdIdx: index('idx_builds_world_id').on(table.worldId),
-    clerkIdIdx: index('idx_builds_clerk_id').on(table.clerkId),
+    worldIdx: index('idx_world').on(table.worldId),
+    userIdx: index('idx_user').on(table.userId),
+    createdIdx: index('idx_created').on(table.createdAt),
+    worldVersionIdx: index('idx_builds_world_version').on(table.worldId, table.version),
   })
 );
 
@@ -75,17 +81,37 @@ export const builds = mysqlTable(
 export const changes = mysqlTable(
   'changes',
   {
-    id: varchar('id', { length: 255 }).primaryKey().default(sql`(UUID())`),
-    buildId: varchar('build_id', { length: 255 }).notNull(),
-    worldId: varchar('world_id', { length: 255 }).notNull(),
-    clerkId: varchar('clerk_id', { length: 255 }).notNull(),
+    id: varchar('id', { length: 36 }).primaryKey(),
+    buildId: varchar('build_id', { length: 36 }),
+    worldId: varchar('world_id', { length: 36 }).notNull(),
+    userId: varchar('user_id', { length: 255 }).notNull(),
     changeType: varchar('change_type', { length: 50 }),
     data: json('data'),
     createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    worldIdIdx: index('idx_changes_world_id').on(table.worldId),
-    buildIdIdx: index('idx_changes_build_id').on(table.buildId),
+    worldIdx: index('idx_world').on(table.worldId),
+    buildIdx: index('idx_build').on(table.buildId),
+    worldCreatedIdx: index('idx_changes_world_created').on(table.worldId, table.createdAt),
+  })
+);
+
+// Shares table - World sharing
+export const shares = mysqlTable(
+  'shares',
+  {
+    id: varchar('id', { length: 36 }).primaryKey(),
+    worldId: varchar('world_id', { length: 36 }).notNull(),
+    userId: varchar('user_id', { length: 255 }).notNull(),
+    shareId: varchar('share_id', { length: 36 }).notNull().unique(),
+    shareUrl: varchar('share_url', { length: 500 }),
+    viewCount: int('view_count').default(0),
+    createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
+    expiresAt: timestamp('expires_at'),
+  },
+  (table) => ({
+    shareIdIdx: index('idx_share_id').on(table.shareId),
+    worldIdx: index('idx_world').on(table.worldId),
   })
 );
 
@@ -93,17 +119,17 @@ export const changes = mysqlTable(
 export const assets = mysqlTable(
   'assets',
   {
-    id: varchar('id', { length: 255 }).primaryKey().default(sql`(UUID())`),
-    clerkId: varchar('clerk_id', { length: 255 }).notNull(),
+    id: varchar('id', { length: 36 }).primaryKey(),
+    userId: varchar('user_id', { length: 255 }).notNull(),
     assetType: varchar('asset_type', { length: 50 }),
-    name: varchar('name', { length: 255 }),
+    name: varchar('name', { length: 255 }).notNull(),
     data: json('data'),
-    thumbnailUrl: varchar('thumbnail_url', { length: 255 }),
+    thumbnailUrl: text('thumbnail_url'),
     createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    clerkIdIdx: index('idx_assets_clerk_id').on(table.clerkId),
-    typeIdx: index('idx_assets_type').on(table.assetType),
+    userIdx: index('idx_user').on(table.userId),
+    typeIdx: index('idx_type').on(table.assetType),
   })
 );
 
@@ -111,12 +137,12 @@ export const assets = mysqlTable(
 export const preferences = mysqlTable(
   'preferences',
   {
-    id: varchar('id', { length: 255 }).primaryKey().default(sql`(UUID())`),
-    clerkId: varchar('clerk_id', { length: 255 }).notNull().unique(),
+    id: varchar('id', { length: 36 }).primaryKey(),
+    userId: varchar('user_id', { length: 255 }).notNull().unique(),
     data: json('data'),
     updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   },
   (table) => ({
-    clerkIdIdx: index('idx_preferences_clerk_id').on(table.clerkId),
+    userIdx: index('idx_user').on(table.userId),
   })
 );

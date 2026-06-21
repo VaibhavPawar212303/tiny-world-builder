@@ -18,7 +18,7 @@ export async function GET() {
     const user = await db
       .select()
       .from(schema.users)
-      .where(eq(schema.users.clerkId, userId))
+      .where(eq(schema.users.id, userId))
       .limit(1);
 
     if (!user || user.length === 0) {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { email, firstName, lastName } = body;
+    const { email, displayName } = body;
 
     const db = await getDatabase();
 
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     const existing = await db
       .select()
       .from(schema.users)
-      .where(eq(schema.users.clerkId, userId))
+      .where(eq(schema.users.id, userId))
       .limit(1);
 
     if (existing && existing.length > 0) {
@@ -67,17 +67,15 @@ export async function POST(req: Request) {
         .update(schema.users)
         .set({
           email,
-          firstName,
-          lastName,
+          displayName,
         })
-        .where(eq(schema.users.clerkId, userId));
+        .where(eq(schema.users.id, userId));
     } else {
       // Create new user
       await db.insert(schema.users).values({
-        clerkId: userId,
+        id: userId,
         email,
-        firstName,
-        lastName,
+        displayName,
       });
     }
 
