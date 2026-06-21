@@ -103,6 +103,33 @@ class TinyWorldAPI {
     );
   }
 
+  // Assets
+  async getAssets() {
+    return this.request('/api/assets', 'GET');
+  }
+
+  async createAsset(assetType, name, data, thumbnailUrl = '') {
+    return this.request('/api/assets', 'POST', {
+      assetType,
+      name,
+      data,
+      thumbnailUrl,
+    });
+  }
+
+  async updateAsset(id, name, data, thumbnailUrl = '') {
+    return this.request('/api/assets', 'PUT', {
+      id,
+      name,
+      data,
+      thumbnailUrl,
+    });
+  }
+
+  async deleteAsset(id) {
+    return this.request('/api/assets', 'DELETE', { id });
+  }
+
   // Preferences
   async getPreferences() {
     return this.request('/api/preferences', 'GET');
