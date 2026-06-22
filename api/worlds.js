@@ -94,18 +94,24 @@ function getTokenFromRequest(req) {
   return authHeader.slice(7);
 }
 
-function getUserIdFromToken(token) {
-  // Extract user ID from token
-  // Format: "auth_<random>" from login, "guest-token-<id>" for guest
-  if (token.startsWith('auth_')) {
-    // For demo, store user ID in a simple map
-    // In production, verify JWT and extract user_id from payload
-    return token.replace('auth_', 'user_');
+async function getUserIdFromToken(token) {
+  // Look up the real user_id from the sessions table using the token
+  try {
+    const sessions = await query(
+      'SELECT user_id FROM sessions WHERE token = ? AND expires_at > NOW()',
+      [token]
+    );
+
+    if (sessions.length === 0) {
+      console.log('[API] Token not found in sessions or expired');
+      return null;
+    }
+
+    return sessions[0].user_id;
+  } catch (error) {
+    console.error('[API] Error looking up token:', error.message);
+    return null;
   }
-  if (token.startsWith('guest-token-')) {
-    return token.replace('guest-token-', 'guest_');
-  }
-  return null;
 }
 
 async function handleGetWorlds(req, res, userId) {
@@ -335,8 +341,8 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Authorization required' });
     }
 
-    // Extract user ID from token
-    const userId = getUserIdFromToken(token);
+    // Look up user ID from token in sessions table
+    const userId = await getUserIdFromToken(token);
     console.log('[📡 HANDLER] User ID from token:', userId);
 
     if (!userId) {

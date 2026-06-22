@@ -51,15 +51,13 @@ async function initializeDatabase() {
   try {
     const pool = await getPool();
 
-    // Drop both tables to start fresh (avoids schema conflicts)
-    try {
-      await pool.execute('SET FOREIGN_KEY_CHECKS=0');
-      await pool.execute('DROP TABLE IF EXISTS sessions');
-      await pool.execute('DROP TABLE IF EXISTS users');
-      await pool.execute('SET FOREIGN_KEY_CHECKS=1');
-      console.log('[DB-INIT] Dropped existing tables');
-    } catch (e) {
-      console.log('[DB-INIT] Table drop info:', e.message);
+    // Check if tables exist before creating
+    const checkUsers = `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`;
+    const [usersExists] = await pool.execute(checkUsers);
+
+    if (usersExists.length > 0) {
+      console.log('[DB-INIT] Users and sessions tables already exist');
+      return true;
     }
 
     // Create users table - simple schema without foreign key references
