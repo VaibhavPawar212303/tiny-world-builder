@@ -158,7 +158,7 @@
           throw new Error('Email and password are required');
         }
 
-        const response = await fetch(`${API_BASE}/auth/login`, {
+        const response = await fetch(`${API_BASE}/auth?action=login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
@@ -215,7 +215,7 @@
           throw new Error('Password must be at least 6 characters');
         }
 
-        const response = await fetch(`${API_BASE}/auth/signup`, {
+        const response = await fetch(`${API_BASE}/auth?action=signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, password }),
@@ -287,7 +287,7 @@
       try {
         const token = localStorage.getItem(AUTH_STORAGE_KEY);
         if (token && !token.startsWith('guest-token-')) {
-          await fetch(`${API_BASE}/auth/logout`, {
+          await fetch(`${API_BASE}/auth?action=logout`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
