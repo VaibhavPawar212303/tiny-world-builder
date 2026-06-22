@@ -9038,6 +9038,18 @@ body.surface-roam-fp { cursor: none; }
   display: none !important;
 }
 
+/* Hide Tiny World Builder logo and WAVE banner */
+.brand,
+.brand-logo,
+.brand-banner,
+#brand-banner,
+#brand-banner-img {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
 /* Mobile control panel */
 .mobile-control-panel {
   transition: max-height 0.3s ease-in-out;
