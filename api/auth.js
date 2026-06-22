@@ -51,12 +51,19 @@ async function initializeDatabase() {
   try {
     const pool = await getPool();
 
+    // Drop sessions table first if it exists (to avoid foreign key issues)
+    try {
+      await pool.execute('DROP TABLE IF EXISTS sessions');
+    } catch (e) {
+      // Ignore drop errors
+    }
+
     // Create users table
     const createUsersTable = `
       CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(36) PRIMARY KEY,
+        id VARCHAR(36) COLLATE utf8mb4_unicode_ci PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL UNIQUE,
+        email VARCHAR(255) NOT NULL UNIQUE COLLATE utf8mb4_unicode_ci,
         password_hash VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -65,22 +72,24 @@ async function initializeDatabase() {
     `;
 
     await pool.execute(createUsersTable);
+    console.log('[DB-INIT] Users table ready');
 
-    // Create sessions table
+    // Create sessions table with proper charset matching
     const createSessionsTable = `
       CREATE TABLE IF NOT EXISTS sessions (
-        id VARCHAR(255) PRIMARY KEY,
-        user_id VARCHAR(36) NOT NULL,
+        id VARCHAR(255) COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+        user_id VARCHAR(36) COLLATE utf8mb4_unicode_ci NOT NULL,
         token VARCHAR(255) NOT NULL UNIQUE,
         expires_at TIMESTAMP NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id),
-        INDEX idx_expires_at (expires_at)
+        INDEX idx_expires_at (expires_at),
+        CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `;
 
     await pool.execute(createSessionsTable);
+    console.log('[DB-INIT] Sessions table ready');
     return true;
 
   } catch (error) {
