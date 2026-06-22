@@ -1,5 +1,8 @@
-// Backend: User logout endpoint
-export default function handler(req, res) {
+// Backend: User logout endpoint - TiDB integration
+const { query } = require('../lib/db');
+const { initializeDatabase } = require('../lib/db-init');
+
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -15,20 +18,34 @@ export default function handler(req, res) {
   }
 
   try {
+    // Initialize database schema
+    await initializeDatabase();
+
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    // In a real application, invalidate the token in a blacklist or database
-    // For now, just acknowledge the logout
-    console.log('[API] User logged out');
+    // Invalidate session in TiDB
+    const result = await query('DELETE FROM sessions WHERE token = ?', [token]);
+
+    if (result.affectedRows === 0) {
+      console.warn('[AUTH] Token not found for logout:', token.substring(0, 20));
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    console.log('[AUTH] ✓ User session terminated');
 
     return res.status(200).json({ message: 'Logged out successfully' });
 
   } catch (error) {
     console.error('[API] Logout error:', error);
+
+    if (error.message.includes('Connection')) {
+      return res.status(503).json({ error: 'Database connection failed' });
+    }
+
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
