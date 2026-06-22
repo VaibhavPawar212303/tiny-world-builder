@@ -85,6 +85,7 @@
   // Pure builder: no side effects, never persists, ignores suppressSave.
   function buildWorldStateObject() {
     const cells = [];
+    let cellsByIsland = {};
     // Walk every populated row + cell, including out-of-home
     // overrides from clicks on ghost boards. Cells with default
     // grass / no kind return null from serializeCell and are
@@ -105,9 +106,18 @@
         // actually edited — skips the 20x20 pre-allocated buffer.
         if (!insideHome && !c.userEdited) continue;
         const entry = serializeCell(x, z, c);
-        if (entry) cells.push(entry);
+        if (entry) {
+          cells.push(entry);
+          // Track cells by island for debugging
+          const boardX = Math.floor(x / GRID);
+          const boardZ = Math.floor(z / GRID);
+          const boardKey = `${boardX},${boardZ}`;
+          if (!cellsByIsland[boardKey]) cellsByIsland[boardKey] = 0;
+          cellsByIsland[boardKey]++;
+        }
       }
     }
+    console.log('[buildWorldStateObject] Total cells:', cells.length, 'By island:', cellsByIsland);
     return {
       v: STORAGE_VERSION,
       gridSize: GRID,
