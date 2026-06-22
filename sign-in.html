@@ -183,7 +183,10 @@
 
       function initiateOAuth(provider) {
         showLoading(`Connecting to ${provider}...`);
-        console.log('[OAuth] Starting', provider, 'OAuth flow');
+        console.log('[OAuth] ========== OAuth Flow Started ==========');
+        console.log('[OAuth] Provider:', provider);
+        console.log('[OAuth] Client ID:', oauthClientId);
+        console.log('[OAuth] Clerk Instance:', clerkInstance);
 
         if (!clerkInstance) {
           showError('Cannot connect to Clerk. Please try again.');
@@ -192,20 +195,26 @@
 
         // Clerk OAuth authorization URL
         const redirectUrl = window.location.origin + '/oauth-callback.html';
+        console.log('[OAuth] Redirect URI:', redirectUrl);
 
         // Store provider in sessionStorage to retrieve it after OAuth redirect
         sessionStorage.setItem('oauth_provider', provider);
+        console.log('[OAuth] Stored provider in sessionStorage:', provider);
 
-        const oauthUrl = `https://${clerkInstance}/oauth/authorize?` +
-          new URLSearchParams({
-            client_id: oauthClientId,
-            redirect_uri: redirectUrl,
-            response_type: 'code',
-            scope: 'openid profile email',
-            provider: provider
-          }).toString();
+        const params = new URLSearchParams({
+          client_id: oauthClientId,
+          redirect_uri: redirectUrl,
+          response_type: 'code',
+          scope: 'openid profile email',
+          provider: provider
+        });
 
-        console.log('[OAuth] Redirecting to:', oauthUrl);
+        const oauthUrl = `https://${clerkInstance}/oauth/authorize?${params.toString()}`;
+        console.log('[OAuth] Full URL:', oauthUrl);
+        console.log('[OAuth] Redirecting...');
+
+        // Log before redirect
+        console.log('[OAuth] ========== About to redirect to Clerk ==========');
         window.location.href = oauthUrl;
       }
 

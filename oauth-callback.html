@@ -107,6 +107,7 @@
         console.log('[OAuth Callback] Provider:', provider);
 
         // Exchange code for token via our backend
+        console.log('[OAuth Callback] Exchanging code with backend...');
         const exchangeResponse = await fetch('/api/oauth/token', {
           method: 'POST',
           headers: {
@@ -119,13 +120,25 @@
           })
         });
 
+        console.log('[OAuth Callback] Exchange response status:', exchangeResponse.status);
+
         if (!exchangeResponse.ok) {
-          const error = await exchangeResponse.json().catch(() => ({}));
-          throw new Error(error.error || `Token exchange failed: ${exchangeResponse.status}`);
+          const errorText = await exchangeResponse.text();
+          console.error('[OAuth Callback] Exchange failed, response:', errorText);
+          const error = (() => {
+            try { return JSON.parse(errorText); } catch (e) { return { error: errorText }; }
+          })();
+          throw new Error(error.error || error.message || `Token exchange failed: ${exchangeResponse.status}`);
         }
 
-        const { token, user } = await exchangeResponse.json();
-        console.log('[OAuth Callback] ✓ Token received for user:', user.email);
+        const response = await exchangeResponse.json();
+        console.log('[OAuth Callback] ✓ Exchange successful');
+        console.log('[OAuth Callback] Response keys:', Object.keys(response));
+
+        const { token, user } = response;
+        console.log('[OAuth Callback] ✓ Token received for user:', user?.email);
+        console.log('[OAuth Callback] Token length:', token?.length);
+        console.log('[OAuth Callback] User data:', JSON.stringify(user));
 
         // Store token and user
         localStorage.setItem('tinyworld:user', JSON.stringify(user));
