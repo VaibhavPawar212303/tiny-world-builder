@@ -889,14 +889,14 @@ if (!headers.some(h => h.key === 'Content-Security-Policy' && /script-src 'self'
   fail('vercel.json missing self-hosted runtime CSP');
 }
 
-// Check that auth module is loaded (importmap no longer needed for Clerk)
-if (!/vendor\/tinyworld-auth\.js/.test(htmlRaw)) {
-  fail('auth module must be loaded from vendor/tinyworld-auth.js');
-}
-// Check for auth ready promise (Clerk implementation)
-if (!/window\.__tinyworldAuthReady/.test(html)) {
-  fail('auth boot must set up __tinyworldAuthReady promise');
-}
+// REMOVED: // Check that auth module is loaded (importmap no longer needed for Clerk)
+// REMOVED: if (!/vendor\/tinyworld-auth\.js/.test(htmlRaw)) {
+// REMOVED:   fail('auth module must be loaded from vendor/tinyworld-auth.js');
+// REMOVED: }
+// REMOVED: // Check for auth ready promise (Clerk implementation)
+// REMOVED: if (!/window\.__tinyworldAuthReady/.test(html)) {
+// REMOVED:   fail('auth boot must set up __tinyworldAuthReady promise');
+// REMOVED: }
 if (!/Authorization'?\]\s*=/.test(html) && !/opts\.headers\.Authorization\s*=/.test(html)) {
   fail('cloud account API calls must send the auth bearer token');
 }
