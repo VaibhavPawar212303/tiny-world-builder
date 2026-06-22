@@ -26,8 +26,8 @@ module.exports = async (req, res) => {
     }
 
     // Exchange authorization code with Clerk for a token
-    const oauthClientId = 'vkAQcBTrI9khCcXHSou8JQEuhabyd8nv';
-    const oauthClientSecret = 'lIdrbFqcu0TXAMji';
+    const oauthClientId = 'lIdrbFqcu0TXAMji';
+    const oauthClientSecret = 'mKqDTZAVGeb659rHCRmI7y46KYG4laZk';
     const clerkInstance = 'charmed-redbird-23.clerk.accounts.dev';
 
     const tokenEndpoint = `https://${clerkInstance}/oauth/token`;
