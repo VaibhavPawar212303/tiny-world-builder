@@ -135,7 +135,10 @@
       const error = document.getElementById('error');
       const form = document.getElementById('signin-form');
 
-      // Get Clerk config
+      // OAuth Client ID from Clerk Dashboard
+      const oauthClientId = 'vkAQcBTrI9khCcXHSou8JQEuhabyd8nv';
+
+      // Get Clerk instance from publishable key
       const publishableKey = window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
       if (!publishableKey) {
         error.textContent = 'Clerk is not configured';
@@ -144,7 +147,6 @@
         return;
       }
 
-      // Extract Clerk instance from publishable key
       function getClerkInstance() {
         try {
           const parts = publishableKey.split('_');
@@ -159,6 +161,7 @@
 
       const clerkInstance = getClerkInstance();
       console.log('[OAuth] Clerk instance:', clerkInstance);
+      console.log('[OAuth] Client ID:', oauthClientId);
 
       function showError(msg) {
         error.textContent = msg;
@@ -189,11 +192,10 @@
 
         // Clerk OAuth authorization URL
         const redirectUrl = window.location.origin + '/oauth-callback.html?provider=' + provider;
-        const clientId = publishableKey;
 
         const oauthUrl = `https://${clerkInstance}/oauth/authorize?` +
           new URLSearchParams({
-            client_id: clientId,
+            client_id: oauthClientId,
             redirect_uri: redirectUrl,
             response_type: 'code',
             scope: 'openid profile email',
