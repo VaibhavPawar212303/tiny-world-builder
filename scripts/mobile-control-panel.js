@@ -312,9 +312,11 @@
       const originalBtn = document.getElementById(btnConfig.id);
       if (!originalBtn) return; // Skip if button doesn't exist
 
-      // Hide original button on mobile
+      // Hide original button on mobile - mark with data attribute
+      originalBtn.setAttribute('data-hidden-on-mobile', 'true');
       if (IS_MOBILE()) {
-        originalBtn.style.display = 'none';
+        originalBtn.style.display = 'none !important';
+        originalBtn.setAttribute('aria-hidden', 'true');
       }
 
       const btn = document.createElement('button');

@@ -8968,6 +8968,8 @@ body.surface-roam-fp { cursor: none; }
     display: none !important;
   }
 
+  /* Hide all buttons that are duplicated in mobile control panel */
+  [data-hidden-on-mobile="true"],
   #layers-toggle,
   #sound-icon,
   #tips-toggle,
@@ -8987,11 +8989,29 @@ body.surface-roam-fp { cursor: none; }
   #stamp-builder,
   #generate,
   #crowd-panel-handle,
+  #crowd-reseed,
+  #crowd-reseed-live,
+  #snd-music-mute,
+  #snd-sfx-mute,
+  #snd-ambient-mute,
+  #snd-engines-mute,
+  #stamp-builder-rebuild,
+  #model-stamp-refresh,
+  #model-stamp-save-default,
+  #model-stamp-reset-default,
+  #voxel-build-import,
   #xr-quicklook,
   #xr-surface,
   #xr-float,
-  #xr-inside {
+  #xr-inside,
+  #minimap-toggle,
+  #agent-panel-handle,
+  #language-trigger,
+  #world-menu-btn,
+  #tips-show {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 }
 
