@@ -50,17 +50,16 @@ async function initializeDatabase() {
   try {
     const pool = await getPool();
 
-    // Drop worlds table to start fresh (avoid schema conflicts)
-    try {
-      await pool.execute('SET FOREIGN_KEY_CHECKS=0');
-      await pool.execute('DROP TABLE IF EXISTS worlds');
-      await pool.execute('SET FOREIGN_KEY_CHECKS=1');
-      console.log('[DB-INIT] Dropped existing worlds table');
-    } catch (e) {
-      console.log('[DB-INIT] Table drop info:', e.message);
+    // Check if table exists before creating
+    const checkTable = `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'worlds'`;
+    const [existingTables] = await pool.execute(checkTable);
+
+    if (existingTables.length > 0) {
+      console.log('[DB-INIT] Worlds table already exists');
+      return true;
     }
 
-    // Create worlds table
+    // Create worlds table if it doesn't exist
     const createWorldsTable = `
       CREATE TABLE worlds (
         id VARCHAR(40) PRIMARY KEY,
