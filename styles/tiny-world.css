@@ -9024,10 +9024,18 @@ body.surface-roam-fp { cursor: none; }
   #stamp-builder-panel,
   .stamp-panel,
   .settings-panel,
-  .agent-panel {
+  .agent-panel,
+  #build-history-panel,
+  #toggle-build-history {
     display: none !important;
     visibility: hidden !important;
   }
+}
+
+/* Hide build history on all views */
+#build-history-panel,
+#toggle-build-history {
+  display: none !important;
 }
 
 /* Mobile control panel */
