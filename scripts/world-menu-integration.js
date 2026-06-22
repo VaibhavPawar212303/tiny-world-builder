@@ -106,7 +106,11 @@
 
         // Apply world state if builder is ready
         if (typeof window.applyState === 'function') {
-          window.applyState(world.state);
+          console.log('[WorldMenu] Applying state to builder...');
+          console.log('[WorldMenu] State has', Array.isArray(world.state?.islands) ? world.state.islands.length : 0, 'islands');
+          console.log('[WorldMenu] State has', Array.isArray(world.state?.cells) ? world.state.cells.length : 0, 'cells');
+          const result = window.applyState(world.state);
+          console.log('[WorldMenu] applyState returned:', result);
           console.log('[WorldMenu] ✓ World loaded:', world.title);
           alert('World loaded: ' + world.title);
         } else {

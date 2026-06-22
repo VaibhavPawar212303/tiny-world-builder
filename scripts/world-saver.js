@@ -232,6 +232,15 @@
 
         const world = await response.json();
         console.log('[WorldSaver] ✓ World loaded:', worldId);
+        console.log('[WorldSaver] State structure:');
+        console.log('[WorldSaver] ├─ Islands:', Array.isArray(world.state?.islands) ? world.state.islands.length : 0);
+        console.log('[WorldSaver] ├─ Cells:', Array.isArray(world.state?.cells) ? world.state.cells.length : 0);
+        console.log('[WorldSaver] ├─ State size:', JSON.stringify(world.state).length, 'bytes');
+        if (Array.isArray(world.state?.islands)) {
+          world.state.islands.forEach((isl, i) => {
+            console.log('[WorldSaver] │  Island', i, ':', isl.id, '- engines:', isl.engines?.length || 0, 'pyramids:', isl.pyramids?.length || 0);
+          });
+        }
 
         return world;
 
