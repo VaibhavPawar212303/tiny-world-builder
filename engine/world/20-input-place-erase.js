@@ -211,6 +211,14 @@
   }
 
   function applyTool(x, z, opts = {}) {
+    // Debug logging for multi-island issues
+    if (typeof selectedEditableIsland === 'function' && selectedEditableIsland()) {
+      const island = selectedEditableIsland();
+      const boardX = island ? island.boardX : 0;
+      const boardZ = island ? island.boardZ : 0;
+      console.log('[applyTool] Island edit - x:', x, 'z:', z, 'island board:', boardX, ',', boardZ, 'expected:', `${boardX*20}-${boardX*20+20}, ${boardZ*20}-${boardZ*20+20}`);
+    }
+
     if (window.__flightActive) return;
     if (window.__tinyworldIsPlayMode && window.__tinyworldIsPlayMode()) return;
     // Multiplayer role gate: in a shared room a viewer/player cannot edit at
