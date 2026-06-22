@@ -156,7 +156,7 @@ async function handleCreateWorld(req, res, userId) {
     console.log('[🔵 API] State JSON size:', stateJson.length, 'bytes');
     console.log('[🔵 API] Inserting into TiDB...');
 
-    await query(
+    const insertResult = await query(
       `INSERT INTO worlds (id, user_id, title, description, state, version, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
       [worldId, userId, title || 'Untitled World', description || '', stateJson, now, now]
@@ -164,11 +164,12 @@ async function handleCreateWorld(req, res, userId) {
 
     console.log('[🔵 API] ✓ Inserted to TiDB');
     console.log('[🔵 API] ├─ id:', worldId);
-    console.log('[🔵 API] ├─ user_id:', userId);
+    console.log('[🔵 API] ├─ user_id:', userId.substring(0, 30) + '...');
     console.log('[🔵 API] ├─ title:', title || 'Untitled World');
     console.log('[🔵 API] ├─ state_size:', stateJson.length);
     console.log('[🔵 API] ├─ created_at:', now);
-    console.log('[🔵 API] └─ version: 1');
+    console.log('[🔵 API] ├─ version: 1');
+    console.log('[🔵 API] └─ affected_rows:', insertResult.affectedRows);
 
     const response = {
       id: worldId,
@@ -241,8 +242,13 @@ async function handleUpdateWorld(req, res, userId, worldId) {
     if (worlds.length === 0) {
       console.error('[🟢 API] ❌ World not found:', worldId);
       console.error('[🟢 API] Listing all worlds for debugging:');
-      const allWorlds = await query('SELECT id, user_id FROM worlds LIMIT 10', []);
-      console.log('[🟢 API] All worlds:', allWorlds);
+      const allWorlds = await query('SELECT id, user_id FROM worlds LIMIT 100', []);
+      console.log('[🟢 API] Total worlds in DB:', allWorlds.length);
+      allWorlds.forEach(w => {
+        console.log('[🟢 API]   ├─ id:', w.id, 'user_id:', w.user_id.substring(0, 30) + '...');
+      });
+      console.log('[🟢 API] Looking for id:', worldId);
+      console.log('[🟢 API] With user_id:', userId);
       return res.status(404).json({ error: 'World not found' });
     }
 
