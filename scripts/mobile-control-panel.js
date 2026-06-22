@@ -1,4 +1,4 @@
-// Mobile unified control panel
+// Mobile unified control panel - comprehensive with ALL buttons
 (function initMobileControlPanel() {
   const IS_MOBILE = () => window.innerWidth <= 768;
 
@@ -6,8 +6,7 @@
 
   // Wait for DOM to be ready
   setTimeout(() => {
-    const CONTROLS = document.querySelector('.controls');
-    if (!CONTROLS) return;
+    if (!document.body) return;
 
     // Create mobile control panel modal
     const panel = document.createElement('div');
@@ -46,7 +45,7 @@
     `;
 
     const title = document.createElement('h3');
-    title.textContent = 'Tools & Settings';
+    title.textContent = 'Controls';
     title.style.cssText = 'margin: 0; font-size: 16px; font-weight: 600;';
     header.appendChild(title);
 
@@ -75,48 +74,116 @@
     content.className = 'control-panel-content';
     content.style.cssText = 'padding: 12px;';
 
-    // Section 1: View & Display
-    const viewSection = createSection('View & Display', [
-      { id: 'home', label: '🏠 Center', tooltip: 'Center on your grid' },
-      { id: 'persp', label: '📦 Perspective', tooltip: 'Toggle camera mode' },
-      { id: 'view-modes', label: '👁️ Views', tooltip: 'Pick a camera view' },
-      { id: 'time-weather', label: '⛅ Weather', tooltip: 'Time & weather' },
-      { id: 'showcase-mode', label: '🎬 Showcase', tooltip: 'Showcase mode' },
-    ]);
-    content.appendChild(viewSection);
+    // Define all button groups
+    const buttonGroups = [
+      {
+        title: '📸 View & Camera',
+        buttons: [
+          { id: 'home', label: 'Center' },
+          { id: 'persp', label: 'Perspective' },
+          { id: 'view-modes', label: 'View Modes' },
+          { id: 'minimap-toggle', label: 'Minimap' },
+          { id: 'showcase-mode', label: 'Showcase' },
+        ]
+      },
+      {
+        title: '⏰ Environment',
+        buttons: [
+          { id: 'time-weather', label: 'Time & Weather' },
+        ]
+      },
+      {
+        title: '🏗️ Building & Tools',
+        buttons: [
+          { id: 'build-play-mode', label: 'Build/Play' },
+          { id: 'stamp-builder', label: 'Stamps' },
+          { id: 'clear', label: 'Clear World' },
+          { id: 'generate', label: 'AI Generate' },
+        ]
+      },
+      {
+        title: '📁 File Operations',
+        buttons: [
+          { id: 'import', label: 'Import JSON' },
+          { id: 'export', label: 'Export JSON' },
+          { id: 'reset', label: 'Reset' },
+        ]
+      },
+      {
+        title: '🎨 Rendering & Look',
+        buttons: [
+          { id: 'render-settings', label: 'Render Settings' },
+        ]
+      },
+      {
+        title: '👥 Crowd & People',
+        buttons: [
+          { id: 'crowd-panel-handle', label: 'Crowd Controls' },
+          { id: 'crowd-reseed', label: 'Reseed Crowd' },
+        ]
+      },
+      {
+        title: '🔊 Audio',
+        buttons: [
+          { id: 'sound-icon', label: 'Sound Controls' },
+          { id: 'snd-music-mute', label: 'Music' },
+          { id: 'snd-sfx-mute', label: 'Effects' },
+          { id: 'snd-ambient-mute', label: 'Ambient' },
+          { id: 'snd-engines-mute', label: 'Engines' },
+        ]
+      },
+      {
+        title: '📋 Panels & Info',
+        buttons: [
+          { id: 'layers-toggle', label: 'World Layers' },
+          { id: 'tips-toggle', label: 'Keyboard Help' },
+          { id: 'tips-show', label: 'Show Controls' },
+        ]
+      },
+      {
+        title: '🤖 AI Agent',
+        buttons: [
+          { id: 'agent-panel-handle', label: 'Agent Chat' },
+        ]
+      },
+      {
+        title: '3D Models & Stamps',
+        buttons: [
+          { id: 'stamp-builder-rebuild', label: 'Rebuild Stamps' },
+          { id: 'model-stamp-refresh', label: 'Scan Models' },
+          { id: 'voxel-build-import', label: 'Import Voxel' },
+        ]
+      },
+      {
+        title: '🎮 XR & AR',
+        buttons: [
+          { id: 'xr-quicklook', label: 'AR Quick Look' },
+          { id: 'xr-surface', label: 'AR Desk' },
+          { id: 'xr-float', label: 'Float' },
+          { id: 'xr-inside', label: 'Enter World' },
+        ]
+      },
+      {
+        title: '⚙️ Settings & Account',
+        buttons: [
+          { id: 'account-btn', label: 'My Account' },
+          { id: 'dev-mode', label: 'Developer Mode' },
+          { id: 'language-trigger', label: 'Language' },
+        ]
+      },
+      {
+        title: '🌍 World & Menu',
+        buttons: [
+          { id: 'world-menu-btn', label: 'My World' },
+        ]
+      },
+    ];
 
-    // Section 2: Building Tools
-    const buildSection = createSection('Building', [
-      { id: 'build-play-mode', label: '🔨 Build/Play', tooltip: 'Switch mode' },
-      { id: 'stamp-builder', label: '🏛️ Stamps', tooltip: 'Open stamps' },
-      { id: 'clear', label: '🗑️ Clear', tooltip: 'Clear to grass' },
-    ]);
-    content.appendChild(buildSection);
-
-    // Section 3: Files
-    const fileSection = createSection('Files', [
-      { id: 'import', label: '📥 Import', tooltip: 'Import JSON' },
-      { id: 'export', label: '📤 Export', tooltip: 'Export JSON' },
-      { id: 'reset', label: '🔄 Reset', tooltip: 'Reset world' },
-    ]);
-    content.appendChild(fileSection);
-
-    // Section 4: Panels
-    const panelSection = createSection('Panels', [
-      { id: 'sound-icon', label: '🔊 Sound', tooltip: 'Sound controls' },
-      { id: 'layers-toggle', label: '📋 Layers', tooltip: 'World items' },
-      { id: 'tips-toggle', label: '⌨️ Controls', tooltip: 'Keyboard help' },
-      { id: 'render-settings', label: '⚙️ Settings', tooltip: 'Render settings' },
-    ]);
-    content.appendChild(panelSection);
-
-    // Section 5: Advanced
-    const advSection = createSection('Advanced', [
-      { id: 'generate', label: '✨ Generate', tooltip: 'AI generation', hidden: true },
-      { id: 'dev-mode', label: '🖥️ Developer', tooltip: 'Developer tools' },
-      { id: 'account-btn', label: '👤 Account', tooltip: 'My account', hidden: true },
-    ]);
-    content.appendChild(advSection);
+    // Add sections with buttons
+    buttonGroups.forEach(group => {
+      const section = createSection(group.title, group.buttons);
+      content.appendChild(section);
+    });
 
     panel.appendChild(content);
     document.body.appendChild(panel);
@@ -155,7 +222,7 @@
       }
 
       if (show) {
-        const maxHeight = Math.min(window.innerHeight * 0.8, 500);
+        const maxHeight = Math.min(window.innerHeight * 0.85, 600);
         panel.style.maxHeight = maxHeight + 'px';
         toggleBtn.textContent = '✕';
         toggleBtn.style.background = '#0066cc';
@@ -242,15 +309,18 @@
     `;
 
     buttons.forEach(btnConfig => {
-      if (btnConfig.hidden) return;
-
       const originalBtn = document.getElementById(btnConfig.id);
-      if (!originalBtn) return;
+      if (!originalBtn) return; // Skip if button doesn't exist
+
+      // Hide original button on mobile
+      if (IS_MOBILE()) {
+        originalBtn.style.display = 'none';
+      }
 
       const btn = document.createElement('button');
       btn.className = 'control-btn';
       btn.type = 'button';
-      btn.title = btnConfig.tooltip;
+      btn.title = btnConfig.label;
       btn.textContent = btnConfig.label;
       btn.style.cssText = `
         padding: 10px 12px;
