@@ -20,46 +20,92 @@ module.exports = async (req, res) => {
     console.log('[OAuth] Provider:', provider);
     console.log('[OAuth] Code length:', code.length);
 
-    // In a real implementation, exchange the code with Clerk's backend
-    // For now, create a test token using the code
     if (!process.env.CLERK_SECRET_KEY) {
       console.error('[OAuth] CLERK_SECRET_KEY not configured');
       return res.status(500).json({ error: 'Server not configured' });
     }
 
-    // Create a JWT token
+    // Exchange authorization code with Clerk for a token
+    const oauthClientId = 'vkAQcBTrI9khCcXHSou8JQEuhabyd8nv';
+    const oauthClientSecret = 'lIdrbFqcu0TXAMji';
+    const clerkInstance = 'charmed-redbird-23.clerk.accounts.dev';
+
+    const tokenEndpoint = `https://${clerkInstance}/oauth/token`;
+
+    console.log('[OAuth] Exchanging code with Clerk token endpoint:', tokenEndpoint);
+
+    const tokenResponse = await fetch(tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: oauthClientId,
+        client_secret: oauthClientSecret,
+        code: code,
+        redirect_uri: 'https://tiny-world-builder-seven.vercel.app/oauth-callback.html'
+      }).toString()
+    });
+
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.text();
+      console.error('[OAuth] Clerk token exchange failed:', tokenResponse.status, error);
+      return res.status(tokenResponse.status).json({
+        error: 'Failed to exchange code with Clerk',
+        details: error
+      });
+    }
+
+    const tokenData = await tokenResponse.json();
+    console.log('[OAuth] ✓ Token received from Clerk');
+
+    const clerkToken = tokenData.access_token;
+    const idToken = tokenData.id_token;
+
+    // Decode the ID token to get user info
+    let userInfo = null;
+    if (idToken) {
+      try {
+        const parts = idToken.split('.');
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        userInfo = payload;
+        console.log('[OAuth] User from ID token:', payload.email);
+      } catch (err) {
+        console.warn('[OAuth] Could not decode ID token:', err.message);
+      }
+    }
+
+    // Create app's own JWT token for backend authentication
     const secret = new TextEncoder().encode(process.env.CLERK_SECRET_KEY);
     const now = Math.floor(Date.now() / 1000);
 
-    // Extract user info from code (in production, fetch from Clerk API)
-    // For demo, create a test user with provider info
-    const userId = 'user_' + Date.now();
-    const userEmail = `${provider}-user-${Date.now()}@clerk.local`;
+    const userId = userInfo?.sub || ('user_' + Date.now());
+    const userEmail = userInfo?.email || provider + '@clerk.local';
 
-    const token = await new jose.SignJWT({
+    const appToken = await new jose.SignJWT({
       sub: userId,
       email: userEmail,
       provider: provider,
       iat: now,
-      exp: now + 3600 * 24, // 24 hours
+      exp: now + 3600 * 24,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .sign(secret);
 
-    console.log('[OAuth] ✓ Token created for user:', userId);
+    console.log('[OAuth] ✓ App token created for user:', userId);
 
     const user = {
       id: userId,
       email: userEmail,
+      name: userInfo?.name || userInfo?.given_name,
+      picture: userInfo?.picture,
       provider: provider,
       created_at: new Date().toISOString()
     };
 
-    // Store user in database (optional)
-    // await db.user.upsert({ id: userId, email: userEmail, provider });
-
     res.status(200).json({
-      token,
+      token: appToken,
       user,
       message: 'OAuth token exchange successful'
     });
