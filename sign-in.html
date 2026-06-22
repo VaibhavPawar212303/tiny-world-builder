@@ -111,8 +111,13 @@
     <div class="loading" id="loading">Redirecting to sign in...</div>
 
     <div id="signin-form">
-      <p>Sign in to your account</p>
-      <button class="button" id="signin-btn">Sign In with Clerk</button>
+      <p>Sign in with your social account</p>
+      <button class="button" id="google-btn" style="background: #4285f4; margin-bottom: 12px; width: 100%;">
+        <span style="margin-right: 8px;">🔵</span> Sign in with Google
+      </button>
+      <button class="button" id="github-btn" style="background: #333; margin-bottom: 12px; width: 100%;">
+        <span style="margin-right: 8px;">⚫</span> Sign in with GitHub
+      </button>
     </div>
 
     <div class="divider">or</div>
@@ -124,54 +129,83 @@
 
   <script>
     (function() {
-      const signinBtn = document.getElementById('signin-btn');
+      const googleBtn = document.getElementById('google-btn');
+      const githubBtn = document.getElementById('github-btn');
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
       const form = document.getElementById('signin-form');
+
+      // Get Clerk config
+      const publishableKey = window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+      if (!publishableKey) {
+        error.textContent = 'Clerk is not configured';
+        error.classList.add('show');
+        form.style.display = 'none';
+        return;
+      }
+
+      // Extract Clerk instance from publishable key
+      function getClerkInstance() {
+        try {
+          const parts = publishableKey.split('_');
+          const encoded = parts[parts.length - 1];
+          const decoded = atob(encoded);
+          return decoded.replace(/\$.*/, '').trim();
+        } catch (err) {
+          console.error('[OAuth] Failed to extract instance:', err);
+          return null;
+        }
+      }
+
+      const clerkInstance = getClerkInstance();
+      console.log('[OAuth] Clerk instance:', clerkInstance);
 
       function showError(msg) {
         error.textContent = msg;
         error.classList.add('show');
         loading.classList.remove('show');
-        signinBtn.disabled = false;
+        form.style.display = '';
+        googleBtn.disabled = false;
+        githubBtn.disabled = false;
       }
 
-      function showLoading() {
+      function showLoading(msg) {
         error.classList.remove('show');
+        loading.textContent = msg || 'Redirecting to sign in...';
         loading.classList.add('show');
         form.style.display = 'none';
-        signinBtn.disabled = true;
+        googleBtn.disabled = true;
+        githubBtn.disabled = true;
       }
 
-      signinBtn.addEventListener('click', () => {
-        showLoading();
-        console.log('[SignIn] Demo mode: Creating test account...');
+      function initiateOAuth(provider) {
+        showLoading(`Connecting to ${provider}...`);
+        console.log('[OAuth] Starting', provider, 'OAuth flow');
 
-        // Demo/test mode: Create a test account and session
-        // In production, this would connect to your backend API
-        setTimeout(() => {
-          const userId = 'user_' + Date.now();
-          const testUser = {
-            id: userId,
-            email: 'demo@tinyworld.local',
-            created_at: new Date().toISOString()
-          };
+        if (!clerkInstance) {
+          showError('Cannot connect to Clerk. Please try again.');
+          return;
+        }
 
-          // Use the correct test token format that the backend expects
-          const testToken = 'test-token-' + userId;
+        // Clerk OAuth authorization URL
+        const redirectUrl = window.location.origin + '/oauth-callback.html?provider=' + provider;
+        const clientId = publishableKey;
 
-          // Store in localStorage and sessionStorage with correct keys
-          localStorage.setItem('tinyworld:user', JSON.stringify(testUser));
-          localStorage.setItem('clerk-session-token', testToken);
-          sessionStorage.setItem('clerk-session-token', testToken);
+        const oauthUrl = `https://${clerkInstance}/oauth/authorize?` +
+          new URLSearchParams({
+            client_id: clientId,
+            redirect_uri: redirectUrl,
+            response_type: 'code',
+            scope: 'openid profile email',
+            provider: provider
+          }).toString();
 
-          console.log('[SignIn] ✓ Test account created:', testUser.email);
+        console.log('[OAuth] Redirecting to:', oauthUrl);
+        window.location.href = oauthUrl;
+      }
 
-          // Redirect to builder
-          const redirect = new URLSearchParams(window.location.search).get('redirect') || '/tiny-world-builder';
-          window.location.href = redirect;
-        }, 1000);
-      });
+      googleBtn.addEventListener('click', () => initiateOAuth('google'));
+      githubBtn.addEventListener('click', () => initiateOAuth('github'));
     })();
   </script>
 </body>
