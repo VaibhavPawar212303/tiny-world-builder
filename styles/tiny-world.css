@@ -8959,3 +8959,12 @@ body.surface-roam-fp { cursor: none; }
     justify-content: center;
   }
 }
+
+/* Mobile panel visibility control */
+.mobile-panel {
+  display: none !important;
+}
+
+.mobile-panel.visible {
+  display: block !important;
+}
