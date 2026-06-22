@@ -79,8 +79,10 @@
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
         const state = params.get('state');
-        const provider = params.get('provider') || 'oauth';
+        const provider = sessionStorage.getItem('oauth_provider') || 'oauth';
         const error = params.get('error');
+
+        console.log('[OAuth Callback] Provider from sessionStorage:', provider);
 
         const statusEl = document.getElementById('status');
         const errorEl = document.getElementById('error');

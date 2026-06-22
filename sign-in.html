@@ -191,7 +191,10 @@
         }
 
         // Clerk OAuth authorization URL
-        const redirectUrl = window.location.origin + '/oauth-callback.html?provider=' + provider;
+        const redirectUrl = window.location.origin + '/oauth-callback.html';
+
+        // Store provider in sessionStorage to retrieve it after OAuth redirect
+        sessionStorage.setItem('oauth_provider', provider);
 
         const oauthUrl = `https://${clerkInstance}/oauth/authorize?` +
           new URLSearchParams({
