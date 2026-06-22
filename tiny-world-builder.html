@@ -10,30 +10,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300..700&family=Space+Grotesk:wght@300..700&display=swap" />
   <link rel="stylesheet" href="styles/tiny-world.css">
   <link rel="stylesheet" href="styles/countdown.css">
-<!-- Clerk Public Key Injection Point -->
-<script id="clerk-key-injection">
-  (function() {
-    console.log('[Clerk Config] Loading Clerk configuration...');
-
-    // Try to load from clerk-config.json (created by publish.sh for Vercel)
-    fetch('/clerk-config.json')
-      .then(r => r.json())
-      .then(config => {
-        if (config.CLERK_PUBLISHABLE_KEY) {
-          window.__CLERK_PUBLISHABLE_KEY = config.CLERK_PUBLISHABLE_KEY;
-          console.log('[Clerk Config] ✓ Loaded from clerk-config.json: ' + config.CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
-        } else {
-          console.warn('[Clerk Config] ✗ No key in clerk-config.json');
-        }
-      })
-      .catch(err => {
-        console.log('[Clerk Config] clerk-config.json not found (local dev mode), key will be injected by dev-server');
-      });
-  })();
-
-  // This is also replaced by dev-server.js with: window.__CLERK_PUBLISHABLE_KEY = "pk_test_..."
-  // And by publish.sh for Vercel deployments
-</script>
 
 <script src="engine/world/00-custom-confirm.js"></script>
 <script type="text/javascript">
@@ -66,19 +42,6 @@
 </script>
 </head>
 <body>
-  <!-- Clerk Auth Modal -->
-  <div id="clerk-auth-container" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;font-family:system-ui,-apple-system,sans-serif">
-    <div id="clerk-auth-modal" style="background:white;border-radius:12px;padding:48px;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:420px;width:90%;text-align:center">
-      <h1 style="margin:0 0 24px;font-size:28px;font-weight:700">Sign in to Tiny World Builder</h1>
-      <div id="clerk-sign-in-root" style="min-height:300px;display:flex;align-items:center;justify-content:center">
-        <div style="color:#666;font-size:14px">
-          <p>Redirecting to sign in...</p>
-          <p style="font-size:12px;margin-top:12px;color:#999">If not redirected, please <a href="#" id="manual-signin-link" style="color:#0066cc;text-decoration:none">click here</a></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="app"></div>
   <div id="root" style="position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;"></div>
   <div id="cloud-layer"></div>
@@ -1622,56 +1585,6 @@
       .finally(function () { window.__tinyworldDefaultIslandSettled = true; });
   })();
   </script>
-  <script id="tinyworld-auth-bootstrap">
-  (function tinyworldAuthBootstrap() {
-    console.log('[Clerk Bootstrap] Starting Clerk key initialization...');
-
-    // Wait for config to load (from clerk-config.json or dev-server injection)
-    let waitAttempts = 0;
-    const maxWaitAttempts = 50; // 5 seconds at 100ms intervals
-
-    function checkAndInitClerk() {
-      waitAttempts++;
-
-      if (window.__CLERK_PUBLISHABLE_KEY) {
-        console.log('[Clerk Bootstrap] ✓ Key available, proceeding with initialization');
-        completeBootstrap();
-        return;
-      }
-
-      if (waitAttempts >= maxWaitAttempts) {
-        console.warn('[Clerk Bootstrap] Timeout waiting for Clerk key (50 attempts), proceeding anyway');
-        completeBootstrap();
-        return;
-      }
-
-      // Wait and try again
-      setTimeout(checkAndInitClerk, 100);
-    }
-
-    function completeBootstrap() {
-      // Key is already set, just create auth promise
-      if (window.__CLERK_PUBLISHABLE_KEY) {
-        console.log('[Clerk Bootstrap] ✓ Key available: ' + window.__CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
-      } else {
-        console.warn('[Clerk Bootstrap] ✗ Key still not available after waiting');
-      }
-
-      window.__tinyworldAuthReady = new Promise(function (resolve) {
-        window.__resolveTinyWorldAuthReady = resolve;
-        console.log('[Clerk Bootstrap] ✓ __resolveTinyWorldAuthReady function set, waiting for initClerk()...');
-        setTimeout(function () {
-          console.warn('[Clerk Bootstrap] Auth timeout after 5s, resolving with false');
-          resolve(false);
-        }, 5000);
-      });
-    }
-
-    // Start checking for the key
-    checkAndInitClerk();
-  })();
-  </script>
-  <script type="module" src="vendor/tinyworld-auth.js"></script>
   <script defer src="vendor/tinyworld-api-client.js"></script>
   <script defer src="scripts/backend-init.js"></script>
   <script defer src="scripts/build-history-ui.js"></script>
