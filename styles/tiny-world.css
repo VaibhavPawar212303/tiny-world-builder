@@ -8881,3 +8881,81 @@ body.surface-roam-fp { cursor: none; }
   pointer-events: none;
   user-select: none;
 }
+
+/* ---- Mobile Collapsible Panels ---- */
+@media (max-width: 768px) {
+  /* Hide panels on mobile by default */
+  .sound-panel,
+  #layers-panel,
+  #tips-panel,
+  #xr-panel,
+  #crowd-panel {
+    display: none !important;
+  }
+
+  /* Show when visible class is added */
+  .sound-panel.visible,
+  #layers-panel.visible,
+  #tips-panel.visible,
+  #xr-panel.visible,
+  #crowd-panel.visible {
+    display: block !important;
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+  }
+
+  /* Backdrop overlay when panels are open */
+  body.panel-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  /* Close buttons */
+  .sound-panel-close,
+  .layers-panel-close,
+  .tips-panel-close,
+  .crowd-panel-toggle {
+    cursor: pointer;
+    font-size: 24px;
+    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Panel headers */
+  .sound-panel-head,
+  .layers-panel-head,
+  .crowd-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border, #ddd);
+  }
+
+  /* Make toggle buttons have min touch target size */
+  #sound-icon,
+  #layers-toggle,
+  #tips-toggle,
+  #crowd-panel-handle {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
