@@ -15,12 +15,18 @@
     loginForm: null,
     signupForm: null,
     closeBtn: null,
+    userAccountArea: null,
+    logoutBtn: null,
+    userDisplayName: null,
 
     init() {
       this.modal = document.getElementById('auth-modal');
       this.loginForm = document.getElementById('auth-login-form');
       this.signupForm = document.getElementById('auth-signup-form');
       this.closeBtn = document.getElementById('auth-close');
+      this.userAccountArea = document.getElementById('user-account-area');
+      this.logoutBtn = document.getElementById('logout-btn');
+      this.userDisplayName = document.getElementById('user-display-name');
 
       if (!this.modal) {
         console.warn('[Auth] Modal element not found');
@@ -56,6 +62,13 @@
       // Guest access
       document.getElementById('auth-guest')?.addEventListener('click', () => {
         this.createGuestUser();
+      });
+
+      // Logout button
+      this.logoutBtn?.addEventListener('click', () => {
+        if (confirm('Are you sure you want to log out?')) {
+          TinyWorldAuthCustom.logout();
+        }
       });
 
       // Keyboard close
@@ -179,6 +192,7 @@
 
         // Reset form
         this.loginForm.reset();
+        this.updateUserDisplay();
         this.close();
 
         // Notify app of auth change
@@ -236,6 +250,7 @@
 
         // Reset form
         this.signupForm.reset();
+        this.updateUserDisplay();
         this.close();
 
         // Notify app of auth change
@@ -264,8 +279,27 @@
       currentUser = guestUser;
       console.log('[Auth] ✓ Guest user created');
 
+      this.updateUserDisplay();
       this.close();
       window.dispatchEvent(new CustomEvent('tinyworld:auth-change', { detail: { user: currentUser } }));
+    },
+
+    updateUserDisplay() {
+      if (!currentUser) {
+        if (this.userAccountArea) {
+          this.userAccountArea.setAttribute('hidden', '');
+        }
+        return;
+      }
+
+      if (this.userAccountArea) {
+        this.userAccountArea.removeAttribute('hidden');
+      }
+
+      if (this.userDisplayName) {
+        const displayName = currentUser.name || currentUser.email || 'User';
+        this.userDisplayName.textContent = displayName;
+      }
     }
   };
 
@@ -301,6 +335,7 @@
         localStorage.removeItem(AUTH_STORAGE_KEY);
         localStorage.removeItem(USER_STORAGE_KEY);
         currentUser = null;
+        AuthUI.updateUserDisplay();
         window.dispatchEvent(new CustomEvent('tinyworld:auth-change', { detail: { user: null } }));
         AuthUI.open();
       }
