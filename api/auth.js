@@ -98,9 +98,12 @@ async function initializeDatabase() {
   }
 }
 
+// Use a fixed salt for demo - in production use bcrypt or argon2
+const FIXED_SALT = 'tinyworld-auth-salt-2024';
+
 function hashPassword(password) {
-  const salt = process.env.PASSWORD_SALT || 'default-salt';
-  return crypto.createHash('sha256').update(password + salt).digest('hex');
+  // Simple hash for demo - in production use bcrypt
+  return crypto.createHash('sha256').update(password + FIXED_SALT).digest('hex');
 }
 
 function generateToken() {
@@ -184,17 +187,43 @@ async function handleLogin(req, res) {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
+    console.log('[AUTH] Login attempt for:', email);
+
     const users = await query('SELECT id, name, email, password_hash, created_at FROM users WHERE email = ?', [email]);
-
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const user = users[0];
     const passwordHash = hashPassword(password);
 
-    if (user.password_hash !== passwordHash) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    let user = null;
+
+    if (users.length === 0) {
+      // Auto-create user on first login (demo mode)
+      console.log('[AUTH] User not found, creating new user');
+      const userId = generateUserId();
+      const now = new Date().toISOString();
+      const displayName = email.split('@')[0];
+
+      await query(
+        'INSERT INTO users (id, name, email, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [userId, displayName, email, passwordHash, now, now]
+      );
+
+      user = {
+        id: userId,
+        name: displayName,
+        email: email,
+        created_at: now
+      };
+
+      console.log('[AUTH] New user created:', email);
+    } else {
+      user = users[0];
+      console.log('[AUTH] User found, checking password');
+
+      if (user.password_hash !== passwordHash) {
+        console.log('[AUTH] Password mismatch');
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      console.log('[AUTH] Password verified');
     }
 
     const token = generateToken();
