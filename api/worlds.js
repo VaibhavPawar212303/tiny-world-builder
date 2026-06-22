@@ -64,7 +64,7 @@ async function initializeDatabase() {
     const createWorldsTable = `
       CREATE TABLE worlds (
         id VARCHAR(40) PRIMARY KEY,
-        user_id VARCHAR(40) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
         title VARCHAR(255) NOT NULL DEFAULT 'Untitled World',
         description TEXT,
         state LONGTEXT NOT NULL,
