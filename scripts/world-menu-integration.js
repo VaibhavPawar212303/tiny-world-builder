@@ -138,7 +138,8 @@
 
         console.log('[WorldMenu] Saving world:', title);
 
-        const success = await window.WorldSaver.saveWorld(title, '', state);
+        // "Save as new" should always CREATE a new world (POST), not update
+        const success = await window.WorldSaver.createWorld(title, '', state);
 
         if (success) {
           alert('World saved: ' + title);
