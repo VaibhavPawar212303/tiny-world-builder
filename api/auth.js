@@ -51,45 +51,45 @@ async function initializeDatabase() {
   try {
     const pool = await getPool();
 
-    // Drop sessions table first if it exists (to avoid foreign key issues)
+    // Drop both tables to start fresh (avoids schema conflicts)
     try {
+      await pool.execute('SET FOREIGN_KEY_CHECKS=0');
       await pool.execute('DROP TABLE IF EXISTS sessions');
+      await pool.execute('DROP TABLE IF EXISTS users');
+      await pool.execute('SET FOREIGN_KEY_CHECKS=1');
+      console.log('[DB-INIT] Dropped existing tables');
     } catch (e) {
-      // Ignore drop errors
+      console.log('[DB-INIT] Table drop info:', e.message);
     }
 
-    // Create users table
+    // Create users table - simple schema without foreign key references
     const createUsersTable = `
-      CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(36) COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+      CREATE TABLE users (
+        id VARCHAR(40) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL UNIQUE COLLATE utf8mb4_unicode_ci,
+        email VARCHAR(255) NOT NULL UNIQUE KEY,
         password_hash VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_email (email)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `;
 
     await pool.execute(createUsersTable);
-    console.log('[DB-INIT] Users table ready');
+    console.log('[DB-INIT] Users table created');
 
-    // Create sessions table with proper charset matching
+    // Create sessions table - simple schema, no foreign key for now
     const createSessionsTable = `
-      CREATE TABLE IF NOT EXISTS sessions (
-        id VARCHAR(255) COLLATE utf8mb4_unicode_ci PRIMARY KEY,
-        user_id VARCHAR(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-        token VARCHAR(255) NOT NULL UNIQUE,
+      CREATE TABLE sessions (
+        id VARCHAR(40) PRIMARY KEY,
+        user_id VARCHAR(40) NOT NULL,
+        token VARCHAR(255) NOT NULL UNIQUE KEY,
         expires_at TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_user_id (user_id),
-        INDEX idx_expires_at (expires_at),
-        CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `;
 
     await pool.execute(createSessionsTable);
-    console.log('[DB-INIT] Sessions table ready');
+    console.log('[DB-INIT] Sessions table created');
     return true;
 
   } catch (error) {
