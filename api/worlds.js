@@ -218,13 +218,25 @@ async function handleUpdateWorld(req, res, userId, worldId) {
 
     // Verify ownership
     console.log('[🟢 API] Checking ownership...');
+    console.log('[🟢 API] ├─ Looking for id:', worldId);
+    console.log('[🟢 API] └─ With user_id:', userId);
+
     const worlds = await query(
       'SELECT id, version FROM worlds WHERE id = ? AND user_id = ?',
       [worldId, userId]
     );
 
+    console.log('[🟢 API] Query result:', worlds.length, 'rows found');
+    if (worlds.length > 0) {
+      console.log('[🟢 API] ├─ id:', worlds[0].id);
+      console.log('[🟢 API] └─ version:', worlds[0].version);
+    }
+
     if (worlds.length === 0) {
       console.error('[🟢 API] ❌ World not found:', worldId);
+      console.error('[🟢 API] Listing all worlds for debugging:');
+      const allWorlds = await query('SELECT id, user_id FROM worlds LIMIT 10', []);
+      console.log('[🟢 API] All worlds:', allWorlds);
       return res.status(404).json({ error: 'World not found' });
     }
 
@@ -335,8 +347,11 @@ export default async function handler(req, res) {
     console.log('[📡 HANDLER] ✓ Authenticated - User:', userId);
 
     // Route based on method and path
-    const pathParts = (req.query.worldId || '').toString().split('/').filter(Boolean);
-    const worldId = pathParts[0];
+    const queryWorldId = req.query.worldId ? req.query.worldId.toString() : '';
+    const pathParts = queryWorldId.split('/').filter(Boolean);
+    const worldId = pathParts[0] || '';
+    console.log('[📡 HANDLER] req.query:', req.query);
+    console.log('[📡 HANDLER] queryWorldId:', queryWorldId);
     console.log('[📡 HANDLER] worldId param:', worldId || 'NONE');
 
     // GET /api/worlds - List all worlds for user
