@@ -126,71 +126,24 @@ function setupSignInButton() {
 async function initClerk() {
   if (clerkInitialized) return true;
 
-  if (clerkInitPromise) {
-    return clerkInitPromise;
-  }
+  console.log('[Auth] ✓ No authentication required - allowing access');
 
-  clerkInitPromise = (async () => {
-    try {
-      console.log('[Clerk] Starting Clerk initialization...');
+  // Create a guest user for unauthenticated access
+  const guestUser = {
+    id: 'guest_' + Date.now(),
+    email: 'guest@tinyworld.local',
+    name: 'Guest',
+    created_at: new Date().toISOString()
+  };
 
-      // For local development only, skip auth
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      console.log('[Clerk] Hostname:', window.location.hostname);
-      console.log('[Clerk] Development mode:', isDev);
+  localStorage.setItem('tinyworld:user', JSON.stringify(guestUser));
+  localStorage.setItem('clerk-session-token', 'guest-token-' + guestUser.id);
+  sessionStorage.setItem('clerk-session-token', 'guest-token-' + guestUser.id);
 
-      if (isDev) {
-        console.log('[Clerk] ✓ Development mode - skipping Clerk auth');
-        hideClerkAuth();
-        clerkInitialized = true;
-        return true;
-      }
-
-      const pubKey = window.__CLERK_PUBLISHABLE_KEY;
-      console.log('[Clerk] Searching for Clerk public key...');
-      console.log('[Clerk]   window.__CLERK_PUBLISHABLE_KEY:', pubKey ? '✓ Present (' + pubKey.substring(0, 20) + '...)' : '✗ Missing');
-      console.log('[Clerk]   window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:', window.__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? '✓ Present' : '✗ Missing');
-      console.log('[Clerk]   window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:', window.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? '✓ Present' : '✗ Missing');
-
-      if (!pubKey || pubKey === 'undefined') {
-        console.error('[Clerk] ✗ Clerk key not configured');
-        console.error('[Clerk] To fix: Set CLERK_PUBLISHABLE_KEY in .env.local or your environment');
-        showClerkError(
-          'Clerk is not configured',
-          'Please set CLERK_PUBLISHABLE_KEY environment variable.'
-        );
-        return false;
-      }
-      console.log('[Clerk] ✓ Clerk key loaded: ' + pubKey.substring(0, 20) + '...');
-
-      // Check if user is already authenticated
-      console.log('[Clerk] Checking if user is already authenticated...');
-      const user = await getUser();
-      console.log('[Clerk] getUser returned:', user ? 'User found: ' + user.email : 'No user');
-
-      if (user) {
-        console.log('[Auth] User already signed in:', user.email);
-        hideClerkAuth();
-        clerkInitialized = true;
-        return true;
-      }
-
-      // Show sign-in/sign-up buttons
-      console.log('[Clerk] Calling setupSignInButton...');
-      setupSignInButton();
-      console.log('[Clerk] setupSignInButton returned');
-
-      clerkInitialized = true;
-      return true;
-    } catch (err) {
-      console.error('Auth initialization error:', err);
-      showClerkError('Authentication Error', err.message || 'Failed to initialize auth');
-      clerkInitialized = false;
-      return false;
-    }
-  })();
-
-  return clerkInitPromise;
+  console.log('[Auth] ✓ Guest user created:', guestUser.email);
+  hideClerkAuth();
+  clerkInitialized = true;
+  return true;
 }
 
 async function getUser() {
