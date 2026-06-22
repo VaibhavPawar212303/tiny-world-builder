@@ -16,7 +16,15 @@
   }
 
   function editableIslandForBoard(boardX, boardZ) {
-    return editableIslandByBoardKey.get(editableIslandBoardKey(boardX, boardZ)) || null;
+    const key = editableIslandBoardKey(boardX, boardZ);
+    const found = editableIslandByBoardKey.get(key);
+    if (found) {
+      console.log('[editableIslandForBoard] Found island for', key, ':', found.id);
+    } else if (boardX > 10 || boardZ > 10) {
+      // Log when looking up islands far from home (debugging multi-island issue)
+      console.log('[editableIslandForBoard] NOT FOUND for', key, '- available keys:', Array.from(editableIslandByBoardKey.keys()));
+    }
+    return found || null;
   }
 
   function editableIslandForWorldCell(x, z) {
@@ -760,7 +768,9 @@
     island.proxyGroup = proxyGroup;
     editableIslands.push(island);
     editableIslandById.set(id, island);
-    editableIslandByBoardKey.set(editableIslandBoardKey(board.boardX, board.boardZ), island);
+    const boardKey = editableIslandBoardKey(board.boardX, board.boardZ);
+    editableIslandByBoardKey.set(boardKey, island);
+    console.log('[createEditableIsland] Created:', id, 'at board:', boardKey, 'boardX:', board.boardX, 'boardZ:', board.boardZ);
     destroyGhostBoard(board.boardX, board.boardZ);
     applyEditableIslandTransform(island);
 
