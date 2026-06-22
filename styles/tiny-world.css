@@ -9008,10 +9008,25 @@ body.surface-roam-fp { cursor: none; }
   #agent-panel-handle,
   #language-trigger,
   #world-menu-btn,
-  #tips-show {
+  #tips-show,
+  .xr-panel {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
+  }
+
+  /* Hide floating panels that are accessed through control panel on mobile */
+  #sound-panel,
+  #layers-panel,
+  #tips-panel,
+  #crowd-panel,
+  #agent-panel,
+  #stamp-builder-panel,
+  .stamp-panel,
+  .settings-panel,
+  .agent-panel {
+    display: none !important;
+    visibility: hidden !important;
   }
 }
 
